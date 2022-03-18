@@ -1,0 +1,8 @@
+/node_modules
+/dist
+/trash
+/.vscode
+/design
+/garbage
+
+/package-lock.json
