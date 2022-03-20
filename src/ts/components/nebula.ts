@@ -50,7 +50,7 @@ const drawImage = function (): void {
   nebulaShader.setUniform('u_mouseX', mouseX)
   nebulaShader.setUniform('u_mouseY', mouseY)
   nebulaShader.setUniform('u_scrollValue', scrollValue)
-  nebulaShader.setUniform('u_control1', getControlValue(1) / 10)
+  nebulaShader.setUniform('u_control1', getControlValue(1) / 100)
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
   gl.clear(gl.COLOR_BUFFER_BIT)
   gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0)
