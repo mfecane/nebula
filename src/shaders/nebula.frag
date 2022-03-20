@@ -24,6 +24,18 @@ uniform float u_scrollValue;
 #define PI 3.14159265358979323846
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
 
+float map2(float value, float min1, float max1, float min2, float max2) {
+  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+
+vec3 map2(vec3 value, float min1, float max1, float min2, float max2) {
+  return vec3(
+    map2(value.x, min1, max1, min2, max2),
+    map2(value.y, min1, max1, min2, max2),
+    map2(value.z, min1, max1, min2, max2)
+  );
+}
+
 vec3 cartesianToPolar (vec3 v)
 {
 	vec3 polar;
@@ -52,16 +64,6 @@ vec3 cartesianToPolar (vec3 v)
 	return polar;
 }
 
-// iq's noise
-float noise( in vec3 x )
-{
-  vec3 p = floor(x);
-  vec3 f = fract(x);
-	f = f * f * (3.0 - 2.0 * f);
-	vec2 uv = (p.xy + vec2(37.0, 17.0) * p.z) + f.xy;
-	return 1.0 - 0.82 * mix(0.0, 0.0, f.z);
-}
-
 float rand(vec2 co)
 {
 	return fract(sin(dot(co*0.123,vec2(12.9898,78.233))) * 43758.5453);
@@ -73,8 +75,11 @@ float rand(vec2 co)
 // This spiral noise works by successively adding and rotating sin waves while increasing frequency.
 // It should work the same on all computers since it's not based on a hash function like some other noises.
 // It can be much faster than other noise functions if you're ok with some repetition.
+
 const float nudge = 0.739513;	// size of perpendicular vector
-float normalizer = 1.0 / sqrt(1.0 + nudge*nudge);	// pythagorean theorem on that perpendicular to maintain scale
+
+float normalizer = 1.0 / sqrt(1.0 + nudge * nudge);	// pythagorean theorem on that perpendicular to maintain scale
+
 float SpiralNoiseC(vec3 p)
 {
   float n = 0.0;	// noise amount
@@ -101,7 +106,7 @@ float SpiralNoise3D(vec3 p)
   float iter = 1.0;
   for (int i = 0; i < 5; i++)
   {
-    n += (sin(p.y * iter) + cos(p.x * iter)) / iter;
+    n += (sin(p.y * iter + u_time / 10.0 * 1.313) + cos(p.x * iter + u_time / 10.0)) / iter;
     p.xz += vec2(p.z, -p.x) * nudge;
     p.xz *= normalizer;
     iter *= 1.33733;
@@ -112,15 +117,23 @@ float SpiralNoise3D(vec3 p)
 float NebulaNoise(vec3 p)
 {
   float final = p.y + 4.5;
-  final -= SpiralNoiseC(p.xyz);   // mid-range noise
-  final += SpiralNoiseC(p.zxy * 0.5123 + 100.0) * 4.0;   // large scale features
-  final -= SpiralNoise3D(p);   // more large scale features, but 3d
+  // frequent from (-5, 0);
+  // mid-range noise
+  final -= SpiralNoiseC(p.xyz);
+  // less frequent noise (-12, - 2)
+  // large scale features
+  final += SpiralNoiseC(p.zxy * 0.5123 + 100.0) * 4.0;
+  // very smooth large scale noise
+  // more large scale features, but 3d
+  final -= SpiralNoise3D(p);
 
   return final;
 }
 
+// combination of noises around (0.0, 30.0)
 float map(vec3 p)
 {
+  // NebulaNoise around (-30, 10)
   float NebNoise = abs(NebulaNoise(p / 0.5) * 0.5);
   return NebNoise + 0.03;
 }
@@ -143,15 +156,16 @@ vec3 computeColor( float density, float radius )
 
 bool RaySphereIntersect(vec3 org, vec3 dir, out float near, out float far)
 {
-	float b = dot(dir, org);
-	float c = dot(org, org) - 8.;
-	float delta = b * b - c;
-	if( delta < 0.0)
-		return false;
-	float deltasqrt = sqrt(delta);
-	near = -b - deltasqrt;
-	far = -b + deltasqrt;
-	return far > 0.0;
+  float b = dot(dir, org);
+  float c = dot(org, org) - 8.;
+  float delta = b * b - c;
+  if(delta < 0.0){
+    return false;
+  }
+  float deltasqrt = sqrt(delta);
+  near = -b - deltasqrt;
+  far = -b + deltasqrt;
+  return far > 0.0;
 }
 
 // Applies the filmic curve from John Hable's presentation
@@ -194,18 +208,6 @@ vec3 polarNormalize (vec3 polar) {
 void main()
 {
   vec3 debugColor;
-  // float seed = 1.0;
-  //   const float KEY_1 = 49.5/256.0;
-	// const float KEY_2 = 50.5/256.0;
-	// const float KEY_3 = 51.5/256.0;
-  float key = 0.0;
-  // key += 0.7*texture(iChannel1, vec2(KEY_1,0.25)).x;
-  // key += 0.7*texture(iChannel1, vec2(KEY_2,0.25)).x;
-  // key += 0.7*texture(iChannel1, vec2(KEY_3,0.25)).x;
-
-	// ro: ray origin
-	// rd: direction of the ray
-	// vec3 rd = normalize(vec3((gl_FragCoord.xy-0.5*iResolution.xy)/iResolution.y, 1.));
 	vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
 	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
 
@@ -218,7 +220,6 @@ void main()
   // DITHERING
 	vec2 seed = fract(uv * 2.0) / 2.0 + sin(u_time / 2.0);
 
-	// ld, totalDensity: local, total density
 	// w: weighting factor
 	float localDensity = 0.0, totalDensity = 0.0, w = 0.0;
 
@@ -236,6 +237,8 @@ void main()
   // march ray to the sphere
   if (RaySphereIntersect(rayOrigin, rayDirection, min_dist, max_dist))
   {
+    // if t < min_dist return 0
+    // if t >= min_dist return 1
 	  t = min_dist * step(t, min_dist);
 
     // raymarch loop
@@ -243,7 +246,10 @@ void main()
     {
       vec3 pos = rayOrigin + t * rayDirection;
 
-      if (totalDensity > 0.9 || d < 0.1 * t || t > 10.0 || sum.a > 0.99 || t > max_dist) break;
+      // t > 10.0 - clipping
+      if (totalDensity > 0.9 || d < 0.1 * t || t > 10.0 || sum.a > 0.99 || t > max_dist) {
+        break;
+      }
 
       // evaluate distance function
       float d = map(pos);
@@ -257,20 +263,22 @@ void main()
 
       // star in center
       vec3 lightColor = vec3(1.0, 0.5, 0.25);
-      sum.rgb += (lightColor / (lDist * lDist) / 30.0); // star itself and bloom around the light
+      // star itself and bloom around the light
+      sum.rgb += (lightColor / (lDist * lDist) / 30.0);
 
       if (d < h)
       {
+
         // compute local density
         localDensity = h - d;
 
-              // compute weighting factor
+        // compute weighting factor
         w = (1.0 - totalDensity) * localDensity;
 
         // accumulate density
-        totalDensity += w + 1./200.;
+        totalDensity += w + 1.0/200.0;
 
-        vec4 col = vec4( computeColor(totalDensity, lDist), totalDensity );
+        vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
 
         // uniform scale density
         col.a *= 0.185;
@@ -278,10 +286,10 @@ void main()
         col.rgb *= col.a;
         // alpha blend in contribution
         sum = sum + col*(1.0 - sum.a);
-
       }
 
-      totalDensity += 1./70.;
+      // still add density, even if not hit
+      totalDensity += 1.0/70.0;
 
       // enforce minimum stepsize
       d = max(d, 0.04);
@@ -292,35 +300,47 @@ void main()
       // trying to optimize step size near the camera and near the light source
       t += max(d * 0.1 * max(min(length(ldst), length(rayOrigin)), 1.0), 0.02);
     }
-    debugColor = vec3(sum);
-
     // simple scattering
-	  sum *= 1.0 / exp( localDensity * 0.2 ) * 0.6;
-   	sum = clamp( sum, 0.0, 1.0 );
+	  sum *= 1.0 / exp(localDensity * 0.2) * 0.6;
+   	sum = clamp(sum, 0.0, 1.0);
     sum.xyz = sum.xyz * sum.xyz * (3.0 - 2.0 * sum.xyz);
 	}
+
+  debugColor = sum.xyz;
 
   // BACKGROUND
   // if (totalDensity < 0.8)
   // {
-  //   vec3 stars = vec3(noise(rayDirection * 500.0) * 0.5 + 0.5);
+  //   vec3 stars = vec3(Noise21(rayDirection.yz));
   //   vec3 starbg = vec3(0.0);
-  //   starbg = mix(starbg, vec3(0.8, 0.9, 1.0), smoothstep(0.99, 1.0, stars) * clamp(dot(vec3(0.0), rayDirection) + 0.75, 0.0, 1.0));
+  //   starbg = mix(
+  //     starbg,
+  //     vec3(0.8, 0.9, 1.0),
+  //     smoothstep(0.99, 1.0, stars) * clamp(dot(vec3(0.0), rayDirection) + 0.75, 0.0, 1.0)
+  //   );
   //   starbg = clamp(starbg, 0.0, 1.0);
-  //   sum.xyz += starbg;
+  //   sum.xyz += stars;
   // }
+
+  // TONEMAPPING
   debugColor = ToneMapFilmicALU(sum.xyz * 2.2);
 
+  // debug noise
+  // vec3 polar4 = cartesianToPolar(rayDirection.xzy);
+  // polar4.x = u_scrollValue;
+  // debugColor = vec3(
+  //   map2(map(polar4) * 4.0, 0.0, 30.0, 0.0, 1.0)
+  // );
+
+  // // MY STARS
   vec3 polar1 = cartesianToPolar(rayDirection.xzy);
   vec3 polar2 = cartesianToPolar(rayDirection.xyz);
   R(rayDirection.yz, PI / 2.0);
   vec3 polar3 = cartesianToPolar(rayDirection.xyz);
-  // TODO ::: rotate polar systems
+  // TODO ::: try optimize
   debugColor += stars(polarNormalize(polar1).yz, 5.43141);
   debugColor += stars(polarNormalize(polar2).yz, 6.4324);
   debugColor += stars(polarNormalize(polar3).yz, 7.11231);
 
-  // FragColor = vec4(sum.xyz, 1.0);
-  // TONEMAPPING
   FragColor = vec4(vec3(debugColor), 1.0);
 }
