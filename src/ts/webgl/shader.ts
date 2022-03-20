@@ -24,13 +24,13 @@ export default class Shader {
 
     gl.compileShader(vertShader, vertSrc)
     if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
-      alert('Error compiling vertex shader')
+      console.error('Error compiling vertex shader')
       console.log(gl.getShaderInfoLog(vertShader))
     }
 
     gl.compileShader(fragShader, fragSrc)
     if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
-      alert('Error compiling fragment shader')
+      console.error('Error compiling fragment shader')
       console.log(gl.getShaderInfoLog(fragShader))
     }
 

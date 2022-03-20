@@ -21,8 +21,36 @@ uniform float u_scrollValue;
 //#define TONEMAPPING
 
 //-------------------
-#define pi 3.14159265
+#define PI 3.14159265358979323846
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
+
+vec3 cartesianToPolar (vec3 v)
+{
+	vec3 polar;
+  float HALF_PI = PI / 2.0;
+	polar[0] = length(v);
+
+	if (v[2] > 0.0f) {
+		polar[1] = atan(sqrt (v[0] * v[0]+ v[1] * v[1]) / v[2]);
+	}
+	else if (v[2] < 0.0f) {
+		polar[1] = atan(sqrt(v[0] * v[0]+ v[1] * v[1]) / v[2]) + PI;
+	}
+	else {
+		polar[1] = PI * 0.5f;
+	}
+	polar[ 1 ] -= HALF_PI;
+	if (v[0] != 0.0f) {
+        polar[2] = clamp(atan (v[1], v[0]), -PI, PI);
+    }
+	else if (v[1] > 0.0) {
+		polar[2] = PI * 0.5f;
+	}
+	else {
+		polar[2] = -PI * 0.5;
+	}
+	return polar;
+}
 
 // iq's noise
 float noise( in vec3 x )
@@ -135,6 +163,34 @@ vec3 ToneMapFilmicALU(vec3 _color)
 	return _color;
 }
 
+float easeInOutQuad(float x) {
+  float two = 2.0;
+  return x < 0.5 ?
+    two * x * x :
+    1.0 - (-two * x + two) * (-two * x + two) / two;
+}
+
+float Noise21(vec2 p){
+  p = fract(p * vec2(123.344314, 234.542341));
+  p += dot(p, p + 23.4123);
+  return fract(p.x * p.y);
+}
+
+float stars(vec2 p, float seed) {
+  p *= 5.0 * seed;
+  float n = Noise21(floor(p));
+
+  p = fract(p);
+  vec2 shift = vec2(n - 0.5, fract(n * 10.0));
+  float d = length(p - shift);
+  float m = smoothstep(0.02 * n * sqrt(seed), 0.0, d) * n;
+  return m;
+}
+
+vec3 polarNormalize (vec3 polar) {
+  return vec3(polar.x, asin(polar.y / PI) * PI, polar.z);
+}
+
 void main()
 {
   vec3 debugColor;
@@ -154,10 +210,10 @@ void main()
 	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
 
   const float mouseFactor = 0.002;
-  R(rayDirection.yz, -u_mouseY * mouseFactor * pi * 2.0);
-  R(rayDirection.xz, u_mouseX * mouseFactor * pi * 2.0);
-  R(rayOrigin.yz, -u_mouseY * mouseFactor * pi * 2.0);
-  R(rayOrigin.xz, u_mouseX * mouseFactor * pi * 2.0);
+  R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
+  R(rayDirection.xz, u_mouseX * mouseFactor * PI * 2.0);
+  R(rayOrigin.yz, -u_mouseY * mouseFactor * PI * 2.0);
+  R(rayOrigin.xz, u_mouseX * mouseFactor * PI * 2.0);
 
   // DITHERING
 	vec2 seed = fract(uv * 2.0) / 2.0 + sin(u_time / 2.0);
@@ -236,6 +292,7 @@ void main()
       // trying to optimize step size near the camera and near the light source
       t += max(d * 0.1 * max(min(length(ldst), length(rayOrigin)), 1.0), 0.02);
     }
+    debugColor = vec3(sum);
 
     // simple scattering
 	  sum *= 1.0 / exp( localDensity * 0.2 ) * 0.6;
@@ -252,9 +309,18 @@ void main()
   //   starbg = clamp(starbg, 0.0, 1.0);
   //   sum.xyz += starbg;
   // }
+  debugColor = ToneMapFilmicALU(sum.xyz * 2.2);
+
+  vec3 polar1 = cartesianToPolar(rayDirection.xzy);
+  vec3 polar2 = cartesianToPolar(rayDirection.xyz);
+  R(rayDirection.yz, PI / 2.0);
+  vec3 polar3 = cartesianToPolar(rayDirection.xyz);
+  // TODO ::: rotate polar systems
+  debugColor += stars(polarNormalize(polar1).yz, 5.43141);
+  debugColor += stars(polarNormalize(polar2).yz, 6.4324);
+  debugColor += stars(polarNormalize(polar3).yz, 7.11231);
 
   // FragColor = vec4(sum.xyz, 1.0);
   // TONEMAPPING
-  debugColor = ToneMapFilmicALU(sum.xyz * 2.2);
   FragColor = vec4(vec3(debugColor), 1.0);
 }
