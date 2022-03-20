@@ -7,6 +7,7 @@ in vec2 uv;
 
 uniform float u_mouseX;
 uniform float u_mouseY;
+uniform float u_scrollValue;
 
 #define ROTATION
 //#define MOUSE_CAMERA_CONTROL
@@ -147,7 +148,7 @@ void main()
 	// rd: direction of the ray
 	// vec3 rd = normalize(vec3((gl_FragCoord.xy-0.5*iResolution.xy)/iResolution.y, 1.));
 	vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, 0.0, -3.0);
+	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
 
   //   #ifdef MOUSE_CAMERA_CONTROL
   const float mouseFactor = 0.002;

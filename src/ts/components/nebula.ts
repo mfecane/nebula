@@ -40,9 +40,10 @@ const drawImage = function (): void {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
   nebulaShader.useProgram()
   nebulaShader.setUniform('u_MVP', proj)
-  const [mouseX, mouseY] = getMouseControl()
+  const [mouseX, mouseY, scrollValue] = getMouseControl()
   nebulaShader.setUniform('u_mouseX', mouseX)
   nebulaShader.setUniform('u_mouseY', mouseY)
+  nebulaShader.setUniform('u_scrollValue', scrollValue)
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
   gl.clear(gl.COLOR_BUFFER_BIT)
   gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0)
@@ -116,6 +117,7 @@ export const init = function (root) {
   nebulaShader.addUniform('u_MVP', '4fv')
   nebulaShader.addUniform('u_mouseX', '1f')
   nebulaShader.addUniform('u_mouseY', '1f')
+  nebulaShader.addUniform('u_scrollValue', '1f')
 
   // Create and bind the framebuffer
   // frameBuffer = gl.createFramebuffer()
