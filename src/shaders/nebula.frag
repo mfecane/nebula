@@ -5,6 +5,9 @@ precision highp float;
 out vec4 FragColor;
 in vec2 uv;
 
+// source https://www.shadertoy.com/view/MsVXWW
+
+uniform float u_time;
 uniform float u_mouseX;
 uniform float u_mouseY;
 uniform float u_scrollValue;
@@ -114,7 +117,7 @@ bool RaySphereIntersect(vec3 org, vec3 dir, out float near, out float far)
 {
 	float b = dot(dir, org);
 	float c = dot(org, org) - 8.;
-	float delta = b*b - c;
+	float delta = b * b - c;
 	if( delta < 0.0)
 		return false;
 	float deltasqrt = sqrt(delta);
@@ -128,14 +131,14 @@ bool RaySphereIntersect(vec3 org, vec3 dir, out float near, out float far)
 vec3 ToneMapFilmicALU(vec3 _color)
 {
 	_color = max(vec3(0), _color - vec3(0.004));
-	_color = (_color * (6.2*_color + vec3(0.5))) / (_color * (6.2 * _color + vec3(1.7)) + vec3(0.06));
+	_color = (_color * (6.2 * _color + vec3(0.5))) / (_color * (6.2 * _color + vec3(1.7)) + vec3(0.06));
 	return _color;
 }
 
 void main()
 {
   vec3 debugColor;
-  float seed = 1.3;
+  // float seed = 1.0;
   //   const float KEY_1 = 49.5/256.0;
 	// const float KEY_2 = 50.5/256.0;
 	// const float KEY_3 = 51.5/256.0;
@@ -150,23 +153,14 @@ void main()
 	vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
 	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
 
-  //   #ifdef MOUSE_CAMERA_CONTROL
   const float mouseFactor = 0.002;
   R(rayDirection.yz, -u_mouseY * mouseFactor * pi * 2.0);
   R(rayDirection.xz, u_mouseX * mouseFactor * pi * 2.0);
   R(rayOrigin.yz, -u_mouseY * mouseFactor * pi * 2.0);
   R(rayOrigin.xz, u_mouseX * mouseFactor * pi * 2.0);
-  //   #else
-  //   R(rayDirection.yz, -pi*3.93);
-  //   R(rayDirection.xz, pi*3.2);
-  //   R(rayOrigin.yz, -pi*3.93);
-  //  	R(rayOrigin.xz, pi*3.2);
-  //   #endif
 
-  //   #ifdef DITHERING
-	// vec2 dpos = ( fragCoord.xy / iResolution.xy );
-	// vec2 seed = dpos + fract(iTime);
-	// #endif
+  // DITHERING
+	vec2 seed = fract(uv * 2.0) / 2.0 + sin(u_time / 2.0);
 
 	// ld, totalDensity: local, total density
 	// w: weighting factor
@@ -198,15 +192,15 @@ void main()
       // evaluate distance function
       float d = map(pos);
 
-  // change this string to control density
+      // change this string to control density
       d = max(d, 0.07);
 
       // point light calculations
-      vec3 ldst = vec3(0.0)-pos;
+      vec3 ldst = vec3(0.0) - pos;
       float lDist = max(length(ldst), 0.001);
 
       // star in center
-      vec3 lightColor=vec3(1.0, 0.5, 0.25);
+      vec3 lightColor = vec3(1.0, 0.5, 0.25);
       sum.rgb += (lightColor / (lDist * lDist) / 30.0); // star itself and bloom around the light
 
       if (d < h)
@@ -236,15 +230,12 @@ void main()
       // enforce minimum stepsize
       d = max(d, 0.04);
 
-      // #ifdef DITHERING
-      // // add in noise to reduce banding and create fuzz
-      // d=abs(d)*(.8+0.2*rand(seed*vec2(i)));
-      // #endif
+      // DITHERING
+      d = abs(d) * (0.8 + 0.2 * rand(seed * vec2(i)));
 
       // trying to optimize step size near the camera and near the light source
       t += max(d * 0.1 * max(min(length(ldst), length(rayOrigin)), 1.0), 0.02);
     }
-    debugColor = vec3(sum);
 
     // simple scattering
 	  sum *= 1.0 / exp( localDensity * 0.2 ) * 0.6;
@@ -252,24 +243,18 @@ void main()
     sum.xyz = sum.xyz * sum.xyz * (3.0 - 2.0 * sum.xyz);
 	}
 
-    // #ifdef BACKGROUND
-    // // stars background
-    // if (totalDensity<.8)
-    // {
-    //     vec3 stars = vec3(noise(rayDirection*500.0)*0.5+0.5);
-    //     vec3 starbg = vec3(0.0);
-    //     starbg = mix(starbg, vec3(0.8,0.9,1.0), smoothstep(0.99, 1.0, stars)*clamp(dot(vec3(0.0),rayDirection)+0.75,0.0,1.0));
-    //     starbg = clamp(starbg, 0.0, 1.0);
-    //     sum.xyz += starbg;
-    // }
+  // BACKGROUND
+  // if (totalDensity < 0.8)
+  // {
+  //   vec3 stars = vec3(noise(rayDirection * 500.0) * 0.5 + 0.5);
+  //   vec3 starbg = vec3(0.0);
+  //   starbg = mix(starbg, vec3(0.8, 0.9, 1.0), smoothstep(0.99, 1.0, stars) * clamp(dot(vec3(0.0), rayDirection) + 0.75, 0.0, 1.0));
+  //   starbg = clamp(starbg, 0.0, 1.0);
+  //   sum.xyz += starbg;
+  // }
 
-	// #endif
-    // FragColor = vec4(sum.xyz, 1.0);
+  // FragColor = vec4(sum.xyz, 1.0);
+  // TONEMAPPING
+  debugColor = ToneMapFilmicALU(sum.xyz * 2.2);
   FragColor = vec4(vec3(debugColor), 1.0);
-
-  //   #ifdef TONEMAPPING
-  //   fragColor = vec4(ToneMapFilmicALU(sum.xyz*2.2),1.0);
-	// #else
-  //   fragColor = vec4(sum.xyz,1.0);
-	// #endif
 }

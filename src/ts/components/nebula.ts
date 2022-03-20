@@ -16,6 +16,8 @@ let width = 0
 let height = 0
 let nebulaShader: Shader
 let proj
+let startTime = Date.now()
+let time = startTime
 
 const calculateMVP = function () {
   const left = -width / height
@@ -41,6 +43,9 @@ const drawImage = function (): void {
   nebulaShader.useProgram()
   nebulaShader.setUniform('u_MVP', proj)
   const [mouseX, mouseY, scrollValue] = getMouseControl()
+  time = (Date.now() - startTime) / 1000
+  // console.log('time', time)
+  nebulaShader.setUniform('u_time', time)
   nebulaShader.setUniform('u_mouseX', mouseX)
   nebulaShader.setUniform('u_mouseY', mouseY)
   nebulaShader.setUniform('u_scrollValue', scrollValue)
@@ -115,6 +120,7 @@ export const init = function (root) {
   nebulaShader.useProgram()
   nebulaShader.setPositions('aPos')
   nebulaShader.addUniform('u_MVP', '4fv')
+  nebulaShader.addUniform('u_time', '1f')
   nebulaShader.addUniform('u_mouseX', '1f')
   nebulaShader.addUniform('u_mouseY', '1f')
   nebulaShader.addUniform('u_scrollValue', '1f')
