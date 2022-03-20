@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Mfecane personal dev site",
   "main": "main.ts",
-  "url": "http://mfecane.github.io",
+  "url": "http://mfecane.github.io/nebula",
   "repository": {
     "type": "git",
-    "url": "ssh://git@github.com:mfecane/mfecane.github.io.git"
+    "url": "ssh://git@github.com:mfecane/nebula.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

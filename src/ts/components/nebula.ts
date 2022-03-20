@@ -3,6 +3,12 @@ import Shader from 'ts/webgl/shader'
 import nebulaVertexShaderSource from 'shaders/nebula.vert'
 import nebulaFragmentShaderSource from 'shaders/nebula.frag'
 
+import {
+  init as orbitControlInit,
+  animate as orbitControlAnimate,
+  getMouseControl,
+} from 'ts/components/orbit-control'
+
 let canvas: HTMLCanvasElement
 let rootElement: HTMLDivElement
 let gl: WebGL2RenderingContext = null
@@ -10,17 +16,10 @@ let width = 0
 let height = 0
 let nebulaShader: Shader
 let proj
-let mouseDown
-let mouseXprev = 0
-let mouseYprev = 0
-let mouseX = 0
-let mouseY = 0
-let speedX = 0
-let speedY = 0
 
 const calculateMVP = function () {
-  const left = -width/height
-  const right = width/height
+  const left = -width / height
+  const right = width / height
 
   const bottom = -1.0
   const top = 1.0
@@ -41,6 +40,7 @@ const drawImage = function (): void {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
   nebulaShader.useProgram()
   nebulaShader.setUniform('u_MVP', proj)
+  const [mouseX, mouseY] = getMouseControl()
   nebulaShader.setUniform('u_mouseX', mouseX)
   nebulaShader.setUniform('u_mouseY', mouseY)
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
@@ -58,51 +58,7 @@ const setCanvasSize = function (): void {
   gl.viewport(0, 0, width, height)
 }
 
-const updateSpeed = function(speed) {
-  if (Math.abs(speed) > 0.1) {
-    return speed *= 0.97
-  }
-  return 0;
-}
-
-const handleMouse = function() {
-  if (!mouseDown){
-    speedX = updateSpeed(speedX)
-    speedY = updateSpeed(speedY)
-  }
-
-  mouseX += speedX
-  mouseY += speedY
-
-  if (mouseX < -2000) mouseX = -2000
-  if (mouseX > 2000) mouseX = 2000
-
-  if (mouseY < -2000) mouseY = -2000
-  if (mouseY > 2000) mouseY = 2000
-}
-
-const handleMouseDown = function(e) {
-  mouseDown = true
-  mouseXprev = e.screenX
-  mouseYprev = e.screenY
-}
-
-const handleMouseUp = function(e) {
-  mouseDown = false
-}
-
-const handleMouseMove = function(e) {
-  if (mouseDown) {
-    speedX += (e.screenX - mouseXprev) * 0.01
-    speedY += (e.screenY - mouseYprev) * 0.01
-
-    mouseXprev = e.screenX
-    mouseYprev = e.screenY
-  }
-}
-
 export const animate = function () {
-  handleMouse()
   calculateMVP()
   drawImage()
   requestAnimationFrame(animate)
@@ -119,9 +75,8 @@ export const init = function (root) {
   setCanvasSize()
 
   window.addEventListener('resize', setCanvasSize)
-  window.addEventListener('mousemove', handleMouseMove);
-  window.addEventListener('mousedown', handleMouseDown);
-  window.addEventListener('mouseup', handleMouseUp);
+  orbitControlInit()
+  orbitControlAnimate()
 
   nebulaShader = new Shader(gl)
   nebulaShader.createProgram(

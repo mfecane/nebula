@@ -147,7 +147,7 @@ void main()
 	// rd: direction of the ray
 	// vec3 rd = normalize(vec3((gl_FragCoord.xy-0.5*iResolution.xy)/iResolution.y, 1.));
 	vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, 0.0, -1.0);
+	vec3 rayOrigin = vec3(0.0, 0.0, -3.0);
 
   //   #ifdef MOUSE_CAMERA_CONTROL
   const float mouseFactor = 0.002;
@@ -199,7 +199,6 @@ void main()
 
   // change this string to control density
       d = max(d, 0.07);
-      debugColor = vec3(d);
 
       // point light calculations
       vec3 ldst = vec3(0.0)-pos;
@@ -244,6 +243,7 @@ void main()
       // trying to optimize step size near the camera and near the light source
       t += max(d * 0.1 * max(min(length(ldst), length(rayOrigin)), 1.0), 0.02);
     }
+    debugColor = vec3(sum);
 
     // simple scattering
 	  sum *= 1.0 / exp( localDensity * 0.2 ) * 0.6;
@@ -263,8 +263,8 @@ void main()
     // }
 
 	// #endif
-    FragColor = vec4(sum.xyz, 1.0);
-    // FragColor = vec4(vec3(debugColor), 1.0);
+    // FragColor = vec4(sum.xyz, 1.0);
+  FragColor = vec4(vec3(debugColor), 1.0);
 
   //   #ifdef TONEMAPPING
   //   fragColor = vec4(ToneMapFilmicALU(sum.xyz*2.2),1.0);
