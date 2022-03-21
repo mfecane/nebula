@@ -12,6 +12,8 @@ uniform float u_mouseX;
 uniform float u_mouseY;
 uniform float u_scrollValue;
 
+uniform float u_control1;
+
 #define ROTATION
 //#define MOUSE_CAMERA_CONTROL
 
@@ -106,7 +108,7 @@ float SpiralNoise3D(vec3 p)
   float iter = 1.0;
   for (int i = 0; i < 5; i++)
   {
-    n += (sin(p.y * iter + u_time / 10.0 * 1.313) + cos(p.x * iter + u_time / 10.0)) / iter;
+    n += (sin(p.y * iter + u_control1 * 1.313) + cos(p.x * iter + u_control1)) / iter;
     p.xz += vec2(p.z, -p.x) * nudge;
     p.xz *= normalizer;
     iter *= 1.33733;

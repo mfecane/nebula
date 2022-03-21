@@ -2,6 +2,7 @@ import Shader from 'ts/webgl/shader'
 
 import nebulaVertexShaderSource from 'shaders/nebula.vert'
 import nebulaFragmentShaderSource from 'shaders/nebula.frag'
+import { init as initControls, getValue as getControlValue } from 'ts/components/controls'
 
 import {
   init as orbitControlInit,
@@ -49,6 +50,7 @@ const drawImage = function (): void {
   nebulaShader.setUniform('u_mouseX', mouseX)
   nebulaShader.setUniform('u_mouseY', mouseY)
   nebulaShader.setUniform('u_scrollValue', scrollValue)
+  nebulaShader.setUniform('u_control1', getControlValue(1) / 10)
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
   gl.clear(gl.COLOR_BUFFER_BIT)
   gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0)
@@ -83,6 +85,7 @@ export const init = function (root) {
   window.addEventListener('resize', setCanvasSize)
   orbitControlInit()
   orbitControlAnimate()
+  initControls()
 
   nebulaShader = new Shader(gl)
   nebulaShader.createProgram(
@@ -124,6 +127,7 @@ export const init = function (root) {
   nebulaShader.addUniform('u_mouseX', '1f')
   nebulaShader.addUniform('u_mouseY', '1f')
   nebulaShader.addUniform('u_scrollValue', '1f')
+  nebulaShader.addUniform('u_control1', '1f')
 
   // Create and bind the framebuffer
   // frameBuffer = gl.createFramebuffer()
