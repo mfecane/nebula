@@ -23,8 +23,8 @@ uniform float u_control5;
 
 #define DITHERING
 #define BACKGROUND
-#define MAX_STEPS 100
-#define MAX_DIST 100.0
+#define MAX_STEPS 200
+#define MAX_DIST 10.0
 #define SURF_DIST 0.00001 // hit distance
 
 //#define TONEMAPPING
@@ -141,7 +141,7 @@ float NebulaNoise(vec3 p)
 }
 
 // combination of noises around (0.0, 30.0)
-float map(vec3 p)
+float mapNebulaDensity(vec3 p)
 {
   // NebulaNoise around (-30, 10)
   float NebNoise = abs(NebulaNoise(p / 0.5) * 0.5);
@@ -164,12 +164,12 @@ vec3 computeColor( float density, float radius )
 	return result;
 }
 
-bool RaySphereIntersect(vec3 org, vec3 dir, out float near, out float far)
+bool RaySphereIntersect(vec3 org, vec3 dir, float radius, out float near, out float far)
 {
   float b = dot(dir, org);
-  float c = dot(org, org) - 8.;
+  float c = dot(org, org) - radius;
   float delta = b * b - c;
-  if(delta < 0.0){
+  if (delta < 0.0){
     return false;
   }
   float deltasqrt = sqrt(delta);
@@ -206,13 +206,19 @@ float Noise31(vec3 p){
   return fract(p.x * p.y * p.z);
 }
 
-float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+float mod289(float x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
 
-vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+vec4 mod289(vec4 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
 
-vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
+vec4 perm(vec4 x) {
+  return mod289(((x * 34.0) + 1.0) * x);
+}
 
-float noise3d(vec3 p){
+float noise3d(vec3 p) {
     vec3 a = floor(p);
     vec3 d = p - a;
     d = d * d * (3.0 - 2.0 * d);
@@ -350,6 +356,57 @@ vec3 GetNormal(vec3 p) {
   return normalize(n);
 }
 
+float densitySphere(vec3 p) {
+  if (length(p) < 1.0) {
+    return 1.0 - length(p);
+  }
+  return 0.0;
+}
+
+float densityFunction(vec3 p) {
+  float noise = mapNebulaDensity(p);
+
+  return map2(noise, -5.0, 5.0, 0.0, 1.0); // * densitySphere(p);
+  // return densitySphere(p);
+}
+
+float rayMarchDensity(vec3 rayOrigin, vec3 rayDirection) {
+  float distanceStep = 0.03;
+
+  float maxDistance = 0.0;
+  float minDistance = 0.0;
+  float radius = 0.5 + 0.5 * u_control2;
+
+  bool isIntersecting = RaySphereIntersect(
+    rayOrigin, rayDirection, radius, minDistance, maxDistance
+  );
+
+  if(isIntersecting) {
+    float totalDensity = 0.0;
+    float rayLength = minDistance;
+
+    for(int i = 0; i < MAX_STEPS && rayLength < maxDistance; i++) {
+      vec3 p = rayOrigin + rayDirection * rayLength;
+      float density = densityFunction(p) * 0.03 * u_control1;
+      totalDensity += density;
+      rayLength += distanceStep;
+    }
+
+    return totalDensity;
+  }
+
+  return 1.0;
+}
+
+
+vec4 debug3dNoise(vec2 uv) {
+  vec3 dummyPoint = vec3(uv.x, uv.y, 2.0 * u_control3) * 10.0;
+  float noise = mapNebulaDensity(dummyPoint);
+  noise = map2(noise, -2.0, 12.0, 0.1, 1.0);
+  return vec4(noise, noise, noise, 1.0);
+}
+
+
 void main()
 {
 //   vec3 debugColor;
@@ -397,7 +454,7 @@ const float mouseFactor = 0.002;
 //       }
 
 //       // evaluate distance function
-//       float d = map(pos);
+//       float d = mapNebulaDensity(pos);
 
 //       // change this string to control density
 //       d = max(d, 0.07);
@@ -474,7 +531,7 @@ const float mouseFactor = 0.002;
 //   // vec3 polar4 = cartesianToPolar(rayDirection.xzy);
 //   // polar4.x = u_scrollValue;
 //   // debugColor = vec3(
-//   //   map2(map(polar4) * 4.0, 0.0, 30.0, 0.0, 1.0)
+//   //   map2(mapNebulaDensity(polar4) * 4.0, 0.0, 30.0, 0.0, 1.0)
 //   // );
 
 //   // // MY STARS
@@ -496,27 +553,19 @@ const float mouseFactor = 0.002;
 
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
 	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
+
   R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
   R(rayDirection.xz, u_mouseX * mouseFactor * PI * 2.0);
   R(rayOrigin.yz, -u_mouseY * mouseFactor * PI * 2.0);
   R(rayOrigin.xz, u_mouseX * mouseFactor * PI * 2.0);
 
-  float d = rayMarch(rayOrigin, rayDirection);
+  float d = rayMarchDensity(rayOrigin, rayDirection);
+  col = vec3(d);
 
-  if(d<MAX_DIST) {
-      vec3 p = rayOrigin + rayDirection * d;
-      vec3 n = GetNormal(p);
-      vec3 r = reflect(rayDirection, n);
+  // TESTS
 
-      float dif = dot(n, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
-      col = vec3(dif);
-  }
+  // 1.0 test noise
+  FragColor = debug3dNoise(uv);
 
-  d /= 6.0;
-
-  // debug noise
-
-  // FragColor = vec4(vec3(noise3d(vec3(uv.x, uv.y, 1.0) * 20.0)), 1.0);
-
-  FragColor = vec4(col, 1.0);
+  // FragColor = vec4(col, 1.0);
 }
