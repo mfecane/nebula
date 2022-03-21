@@ -25,7 +25,7 @@ uniform float u_control5;
 #define BACKGROUND
 #define MAX_STEPS 100
 #define MAX_DIST 100.0
-#define SURF_DIST 0.001 // hit distance
+#define SURF_DIST 0.00001 // hit distance
 
 //#define TONEMAPPING
 
@@ -200,6 +200,40 @@ float Noise21(vec2 p){
   return fract(p.x * p.y);
 }
 
+float Noise31(vec3 p){
+  p = fract(p * vec3(123.344314, 234.542341, 123.432423));
+  p += dot(p, p + 23.4123);
+  return fract(p.x * p.y * p.z);
+}
+
+float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+
+vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+
+vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
+
+float noise3d(vec3 p){
+    vec3 a = floor(p);
+    vec3 d = p - a;
+    d = d * d * (3.0 - 2.0 * d);
+
+    vec4 b = a.xxyy + vec4(0.0, 1.0, 0.0, 1.0);
+    vec4 k1 = perm(b.xyxy);
+    vec4 k2 = perm(k1.xyxy + b.zzww);
+
+    vec4 c = k2 + a.zzzz;
+    vec4 k3 = perm(c);
+    vec4 k4 = perm(c + 1.0);
+
+    vec4 o1 = fract(k3 * (1.0 / 41.0));
+    vec4 o2 = fract(k4 * (1.0 / 41.0));
+
+    vec4 o3 = o2 * d.z + o1 * (1.0 - d.z);
+    vec2 o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
+
+    return o4.y * d.y + o4.x * (1.0 - d.y);
+}
+
 float stars(vec2 p, float seed) {
   p *= 5.0 * seed;
   float n = Noise21(floor(p));
@@ -247,16 +281,28 @@ float smin(float a, float b, float k) {
   return mix(b, a, h) - k * h * (1.0 - h);
 }
 
+float SmoothNoise(vec2 p) {
+	const vec2 d = vec2(0.0, 1.0);
+  vec2 b = floor(p);
+  vec2 f = smoothstep(vec2(0.0), vec2(1.0), fract(p));
+	return mix(
+    mix(rand(b), rand(b + d.yx), f.x),
+    mix(rand(b + d.xy), rand(b + d.yy), f.x)
+    , f.y
+  );
+}
+
 float sdSphere(vec3 p, float radius) {
-  float fact = (1.0 + Noise21(floor(p.xy * 50.0)) * u_control3);
-  return (length(p / fact) - radius) * fact;
+  return (length(p) - radius);
 }
 
 float GetDist(vec3 p) {
   // float box = sdBox(p - vec3(0.0, 1.0, 0.0), vec3(1.0));
-  float sphereDist = sdSphere(p, 0.8 + u_control1 * 0.5);
-  float gyroid = sdGyroid(p, 4.0 + u_control2 * 4.0);
+  float sphereDist = sdSphere(p, 0.5 + u_control1 * 2.0);
+  float gyroid = sdGyroid(p, 1.0 + u_control2 * 8.0);
   float d = smin(sphereDist, gyroid * 0.9, -0.07);
+
+  d -= noise3d(p * u_control4 * 3.0) * u_control3;
 
   return d;
 }
@@ -461,5 +507,10 @@ const float mouseFactor = 0.002;
   }
 
   d /= 6.0;
+
+  // debug noise
+
+  // FragColor = vec4(vec3(noise3d(vec3(uv.x, uv.y, 1.0) * 20.0)), 1.0);
+
   FragColor = vec4(col, 1.0);
 }
