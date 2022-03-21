@@ -13,6 +13,10 @@ uniform float u_mouseY;
 uniform float u_scrollValue;
 
 uniform float u_control1;
+uniform float u_control2;
+uniform float u_control3;
+uniform float u_control4;
+uniform float u_control5;
 
 #define ROTATION
 //#define MOUSE_CAMERA_CONTROL
@@ -243,11 +247,15 @@ float smin(float a, float b, float k) {
   return mix(b, a, h) - k * h * (1.0 - h);
 }
 
+float sdSphere(vec3 p, float radius) {
+  return length(p) - radius - Noise21(p.xy) / 2.0;
+}
+
 float GetDist(vec3 p) {
-  float box = sdBox(p - vec3(0.0, 1.0, 0.0), vec3(1.0));
-  float g = u_control1 * 8.0;
-  float gyroid = sdGyroid(p, g);
-  float d = smin(box, gyroid * 0.9, -0.07);
+  // float box = sdBox(p - vec3(0.0, 1.0, 0.0), vec3(1.0));
+  float sphereDist = sdSphere(p, 0.8 + u_control1 * 0.5);
+  float gyroid = sdGyroid(p, 4.0 + u_control2 * 4.0);
+  float d = smin(sphereDist, gyroid * 0.9, -0.07);
 
   return d;
 }
@@ -426,10 +434,19 @@ const float mouseFactor = 0.002;
 //   debugColor += stars(polarNormalize(polar2).yz, 6.4324);
 //   debugColor += stars(polarNormalize(polar3).yz, 7.11231);
   vec3 col = vec3(0.0);
-  vec3 rayOrigin = vec3(0.0, 2.0, -2.0);
-  rayOrigin.yz *= Rot(-u_mouseY * mouseFactor * PI + 1.0);
-  rayOrigin.xz *= Rot(-u_mouseX * mouseFactor * TAU);
-  vec3 rayDirection = GetRayDir(uv, rayOrigin, vec3(0.0, 1.0, 0.0), 1.0);
+
+  // art of code' ro and rd
+  // vec3 rayOrigin = vec3(0.0, 2.0, -2.0);
+  // rayOrigin.yz *= Rot(-u_mouseY * mouseFactor * PI + 1.0);
+  // rayOrigin.xz *= Rot(-u_mouseX * mouseFactor * TAU);
+  // vec3 rayDirection = GetRayDir(uv, rayOrigin, vec3(0.0, 1.0, 0.0), 1.0);
+
+  vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
+	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
+  R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
+  R(rayDirection.xz, u_mouseX * mouseFactor * PI * 2.0);
+  R(rayOrigin.yz, -u_mouseY * mouseFactor * PI * 2.0);
+  R(rayOrigin.xz, u_mouseX * mouseFactor * PI * 2.0);
 
   float d = rayMarch(rayOrigin, rayDirection);
 
