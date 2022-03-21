@@ -248,7 +248,8 @@ float smin(float a, float b, float k) {
 }
 
 float sdSphere(vec3 p, float radius) {
-  return length(p) - radius - Noise21(p.xy) / 2.0;
+  float fact = (1.0 + Noise21(floor(p.xy * 50.0)) * u_control3);
+  return (length(p / fact) - radius) * fact;
 }
 
 float GetDist(vec3 p) {
