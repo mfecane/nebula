@@ -10,7 +10,7 @@ let speedY = 0
 
 let lastScrollValue = 0
 let scrollValue = 1
-let scrollValueMin = 0.5
+let scrollValueMin = 1
 let scrollValueMax = 4
 let scrollStep = 0.25
 let targetScrollValue = 1

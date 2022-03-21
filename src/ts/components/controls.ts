@@ -4,7 +4,7 @@ let control3: HTMLInputElement
 let control4: HTMLInputElement
 let control5: HTMLInputElement
 let controls: HTMLElement
-const values: number[] = [50, 50, 50, 50, 50]
+const values: number[] = [50, 50, 50, 50, 50, 50]
 
 const handleInput = function (index: number, e: InputEvent): void {
   values[index] = e.target.value

@@ -273,7 +273,7 @@ float sdBox(vec3 p, vec3 s) {
 
 float sdGyroid(vec3 p, float scale) {
   p *= scale;
-  return abs(dot(sin(p), cos(p.zxy))) / scale - 0.08;
+  return abs(dot(sin(p), cos(p.zxy))) / scale - 0.16;
 }
 
 float smin(float a, float b, float k) {
@@ -298,11 +298,17 @@ float sdSphere(vec3 p, float radius) {
 
 float GetDist(vec3 p) {
   // float box = sdBox(p - vec3(0.0, 1.0, 0.0), vec3(1.0));
-  float sphereDist = sdSphere(p, 0.5 + u_control1 * 2.0);
+
+  float angle = (1.0 - p.y) * (-PI + u_control5 * TAU);
+  p = vec3(
+    p.x * sin(angle) + p.z * cos(angle),
+    p.y * u_control3,
+    p.x * - cos(angle) + p.z * sin(angle)
+  );
+
+  float sphereDist = sdSphere(p, 0.5 + u_control1 * 1.0);
   float gyroid = sdGyroid(p, 1.0 + u_control2 * 8.0);
   float d = smin(sphereDist, gyroid * 0.9, -0.07);
-
-  d -= noise3d(p * u_control4 * 3.0) * u_control3;
 
   return d;
 }
