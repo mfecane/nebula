@@ -61,8 +61,9 @@ const drawImage = function (): void {
 }
 
 const setCanvasSize = function (): void {
-  width = rootElement.clientWidth
-  height = rootElement.clientHeight
+  width = rootElement.clientWidth / 2
+  height = rootElement.clientHeight / 2
+
   canvas.width = width
   canvas.height = height
   canvas.style.width = `${width}px`

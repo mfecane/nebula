@@ -116,7 +116,7 @@ float SpiralNoise3D(vec3 p)
   float iter = 1.0;
   for (int i = 0; i < 5; i++)
   {
-    n += (sin(p.y * iter + u_control1 * 1.313) + cos(p.x * iter + u_control1)) / iter;
+    n += (sin(p.y * iter) + cos(p.x * iter)) / iter;
     p.xz += vec2(p.z, -p.x) * nudge;
     p.xz *= normalizer;
     iter *= 1.33733;
@@ -312,7 +312,7 @@ float GetDist(vec3 p) {
     p.x * - cos(angle) + p.z * sin(angle)
   );
 
-  float sphereDist = sdSphere(p, 0.5 + u_control1 * 1.0);
+  float sphereDist = sdSphere(p, 0.5);
   float gyroid = sdGyroid(p, 1.0 + u_control2 * 8.0);
   float d = smin(sphereDist, gyroid * 0.9, -0.07);
 
@@ -366,49 +366,92 @@ float densitySphere(vec3 p) {
 float densityFunction(vec3 p) {
   float noise = mapNebulaDensity(p);
 
-  return map2(noise, -5.0, 5.0, 0.0, 1.0); // * densitySphere(p);
+  return map2(noise, -2.0, 7.0, 0.1, 1.0); // * densitySphere(p);
   // return densitySphere(p);
 }
 
-float rayMarchDensity(vec3 rayOrigin, vec3 rayDirection) {
-  float distanceStep = 0.03;
+float rayMarchLight(vec3 rayOrigin, vec3 rayDirection) {
+  float distanceStep = 0.2;
 
   float maxDistance = 0.0;
   float minDistance = 0.0;
-  float radius = 0.5 + 0.5 * u_control2;
+  float radius = 1.0;
 
   bool isIntersecting = RaySphereIntersect(
     rayOrigin, rayDirection, radius, minDistance, maxDistance
   );
 
   if(isIntersecting) {
-    float totalDensity = 0.0;
-    float rayLength = minDistance;
-
+    float totalDensity = 1.0;
+    float rayLength = 0.0;
+    vec3 p = rayOrigin;
     for(int i = 0; i < MAX_STEPS && rayLength < maxDistance; i++) {
-      vec3 p = rayOrigin + rayDirection * rayLength;
-      float density = densityFunction(p) * 0.03 * u_control1;
-      totalDensity += density;
+      float density = densityFunction(p) * distanceStep;
+      totalDensity *= (1.0 - density * 0.1 * u_control1); // absorption
+      if (totalDensity < 0.1) {
+        break;
+      }
       rayLength += distanceStep;
+      p = rayOrigin + rayDirection * rayLength;
     }
 
     return totalDensity;
   }
 
-  return 1.0;
+  return 0.0;
+}
+
+float rayMarchDensity(vec3 rayOrigin, vec3 rayDirection) {
+  float distanceStep = 0.05;
+  vec3 lightPos = vec3(0.0, 1.0, 0.0);
+
+  float maxDistance = 0.0;
+  float minDistance = 0.0;
+  float radius = 1.0;
+
+  bool isIntersecting = RaySphereIntersect(
+    rayOrigin, rayDirection, radius, minDistance, maxDistance
+  );
+
+  if(isIntersecting) {
+    float totalTranslucence = 1.0;
+    float color = 0.0;
+    float rayLength = minDistance;
+
+    vec3 p = rayOrigin;
+    for(int i = 0; i < MAX_STEPS && rayLength < maxDistance; i++) {
+
+      float density = densityFunction(p) * distanceStep;
+
+      if (density > 0.8) {
+        break;
+      }
+
+      float light = rayMarchLight(p, lightPos);
+
+      totalTranslucence *= (1.0 - density * 0.5);
+      color += density * totalTranslucence * light * 0.5;
+      rayLength += distanceStep;
+      p = rayOrigin + rayDirection * rayLength;
+    }
+
+    return color;
+  }
+
+  return 0.0;
 }
 
 
 vec4 debug3dNoise(vec2 uv) {
   vec3 dummyPoint = vec3(uv.x, uv.y, 2.0 * u_control3) * 10.0;
   float noise = mapNebulaDensity(dummyPoint);
-  noise = map2(noise, -2.0, 12.0, 0.1, 1.0);
+  noise = map2(noise, -2.0, 7.0, 0.1, 1.0);
   return vec4(noise, noise, noise, 1.0);
 }
 
 
-void main()
-{
+void oldMain() {
+
 //   vec3 debugColor;
 // 	vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
 // 	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
@@ -550,22 +593,27 @@ const float mouseFactor = 0.002;
   // rayOrigin.yz *= Rot(-u_mouseY * mouseFactor * PI + 1.0);
   // rayOrigin.xz *= Rot(-u_mouseX * mouseFactor * TAU);
   // vec3 rayDirection = GetRayDir(uv, rayOrigin, vec3(0.0, 1.0, 0.0), 1.0);
+}
+
+void main()
+{
 
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
 	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
 
+  const float mouseFactor = 0.002;
   R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
   R(rayDirection.xz, u_mouseX * mouseFactor * PI * 2.0);
   R(rayOrigin.yz, -u_mouseY * mouseFactor * PI * 2.0);
   R(rayOrigin.xz, u_mouseX * mouseFactor * PI * 2.0);
 
-  float d = rayMarchDensity(rayOrigin, rayDirection);
-  col = vec3(d);
+  float denisityIntegral = rayMarchDensity(rayOrigin, rayDirection);
+  vec3 col = vec3(denisityIntegral);
 
   // TESTS
 
   // 1.0 test noise
-  FragColor = debug3dNoise(uv);
+  // FragColor = debug3dNoise(uv);
 
-  // FragColor = vec4(col, 1.0);
+  FragColor = vec4(col, 1.0);
 }
