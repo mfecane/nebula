@@ -24,7 +24,7 @@ uniform float u_control5;
 #define DITHERING
 #define BACKGROUND
 #define MAX_STEPS 200
-#define MAX_DIST 10.0
+#define MAX_DIST 3.0
 #define SURF_DIST 0.00001 // hit distance
 
 //#define TONEMAPPING
@@ -305,18 +305,19 @@ float sdSphere(vec3 p, float radius) {
 float GetDist(vec3 p) {
   // float box = sdBox(p - vec3(0.0, 1.0, 0.0), vec3(1.0));
 
-  float angle = (1.0 - p.y) * (-PI + u_control5 * TAU);
-  p = vec3(
-    p.x * sin(angle) + p.z * cos(angle),
-    p.y * u_control3,
-    p.x * - cos(angle) + p.z * sin(angle)
-  );
+  // float angle = (1.0 - p.y) * (-PI + u_control5 * TAU);
+  // p = vec3(
+  //   p.x * sin(angle) + p.z * cos(angle),
+  //   p.y * u_control3,
+  //   p.x * - cos(angle) + p.z * sin(angle)
+  // );
 
-  float sphereDist = sdSphere(p, 0.5);
-  float gyroid = sdGyroid(p, 1.0 + u_control2 * 8.0);
-  float d = smin(sphereDist, gyroid * 0.9, -0.07);
+  // float sphereDist = sdSphere(p, 0.5);
+  // float gyroid = sdGyroid(p, 1.0 + u_control2 * 8.0);
+  // float d = smin(sphereDist, gyroid * 0.9, -0.07);
+  // return d;
 
-  return d;
+  return length(p.xz) - 0.005;
 }
 
 vec3 GetRayDir(vec2 uv, vec3 p, vec3 l, float z) {
@@ -336,12 +337,13 @@ float rayMarch(vec3 ro, vec3 rd) {
     vec3 p = ro + rd * dO;
     float dS = GetDist(p);
     dO += dS;
-    if (dO > MAX_DIST || abs(dS) < SURF_DIST) {
-      break;
+    if (abs(dS) < SURF_DIST) {
+      return 1.0;
+    }
+    if (dO > MAX_DIST) {
+      0.0;
     }
   }
-
-  return dO;
 }
 
 vec3 GetNormal(vec3 p) {
@@ -364,14 +366,14 @@ float densitySphere(vec3 p) {
 }
 
 float densityFunction(vec3 p) {
-  float noise = mapNebulaDensity(p);
+  float noise = mapNebulaDensity(3.0 * p + vec3(1.0));
 
-  return map2(noise, 0.0, 7.0, 0.1, 1.0); // * densitySphere(p);
+  return clamp(map2(noise, u_control3 * -10.0, u_control4 * 10.0, 0.0, 1.0), 0.0, 1.0); // * densitySphere(p);
   // return densitySphere(p);
 }
 
 float rayMarchLight(vec3 rayOrigin, vec3 rayDirection) {
-  float distanceStep = 0.1;
+  float distanceStep = 0.03;
 
   float maxDistance = 0.0;
   float minDistance = 0.0;
@@ -387,7 +389,7 @@ float rayMarchLight(vec3 rayOrigin, vec3 rayDirection) {
     vec3 p = rayOrigin;
     for(int i = 0; i < MAX_STEPS && rayLength < maxDistance; i++) {
       float density = densityFunction(p) * distanceStep;
-      totalDensity *= (1.0 - density * 1.5 * u_control1); // absorption
+      totalDensity *= (1.0 - density * 5.0 * u_control1); // absorption
       if (totalDensity < 0.1) {
         break;
       }
@@ -403,11 +405,11 @@ float rayMarchLight(vec3 rayOrigin, vec3 rayDirection) {
 
 float rayMarchDensity(vec3 rayOrigin, vec3 rayDirection) {
   float distanceStep = 0.05;
-  vec3 lightPos = vec3(
-    0.5 * (cos(u_control2 * 3.0) - sin(u_control2 * 3.0)),
-    1.0,
-    0.5 * (sin(u_control2 * 3.0) + cos(u_control2 * 3.0))
-  );
+  vec3 lightPos = normalize(vec3(
+    0.5 * (cos(u_control2 * TAU) - sin(u_control2 * TAU)),
+    0.5,
+    0.5 * (sin(u_control2 * TAU) + cos(u_control2 * TAU))
+  ));
 
   float maxDistance = 0.0;
   float minDistance = 0.0;
@@ -433,8 +435,8 @@ float rayMarchDensity(vec3 rayOrigin, vec3 rayDirection) {
 
       float light = rayMarchLight(p, lightPos);
 
-      totalTranslucence *= (1.0 - density * 0.5);
-      color += density * totalTranslucence * light * 0.5;
+      totalTranslucence *= (1.0 - density * 20.0);
+      color += density * (1.0 - totalTranslucence) * light;
       rayLength += distanceStep;
       p = rayOrigin + rayDirection * rayLength;
     }
@@ -453,6 +455,22 @@ vec4 debug3dNoise(vec2 uv) {
   return vec4(noise, noise, noise, 1.0);
 }
 
+float drawLine (vec2 p1, vec2 p2, vec2 uv, float a)
+{
+    float r = 0.;
+    float one_px = 1.; //not really one px
+
+    // get dist between points
+    float d = distance(p1, p2);
+
+    // get dist between current pixel and p1
+    float duv = distance(p1, uv);
+
+    //if point is on line, according to dist, it should match current uv
+    r = 1.-floor(1.-(a*one_px)+distance (mix(p1, p2, clamp(duv/d, 0., 1.)),  uv));
+
+    return r;
+}
 
 void oldMain() {
 
@@ -613,6 +631,8 @@ void main()
 
   float denisityIntegral = rayMarchDensity(rayOrigin, rayDirection);
   vec3 col = vec3(denisityIntegral);
+
+  col += rayMarch(rayOrigin, rayDirection);
 
   // TESTS
 
