@@ -8,10 +8,10 @@ let mouseY = 0
 let speedX = 0
 let speedY = 0
 
-let lastScrollValue = 0
+let lastScrollValue = 1
 let scrollValue = 1
-let scrollValueMin = 1
-let scrollValueMax = 4
+let scrollValueMin = 0
+let scrollValueMax = 1
 let scrollStep = 0.25
 let targetScrollValue = 1
 let scrollTime = 0

@@ -435,7 +435,7 @@ float rayMarchDensity(vec3 rayOrigin, vec3 rayDirection) {
 
       float light = rayMarchLight(p, lightPos);
 
-      totalTranslucence *= (1.0 - density * 20.0);
+      totalTranslucence *= (1.0 - density * 60.0 * u_control5);
       color += density * (1.0 - totalTranslucence) * light;
       rayLength += distanceStep;
       p = rayOrigin + rayDirection * rayLength;
@@ -472,108 +472,99 @@ float drawLine (vec2 p1, vec2 p2, vec2 uv, float a)
     return r;
 }
 
-void oldMain() {
+vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
+  // DITHERING
+	vec2 seed = fract(uv * 2.0) / 2.0 + sin(u_time / 2.0);
 
-//   vec3 debugColor;
-// 	vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-// 	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
+	// w: weighting factor
+	float localDensity = 0.0, totalDensity = 0.0, w = 0.0;
 
-const float mouseFactor = 0.002;
-//   R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
-//   R(rayDirection.xz, u_mouseX * mouseFactor * PI * 2.0);
-//   R(rayOrigin.yz, -u_mouseY * mouseFactor * PI * 2.0);
-//   R(rayOrigin.xz, u_mouseX * mouseFactor * PI * 2.0);
+	// t: length of the ray
+	// d: distance function
+	float dist = 1.0;
+  float rayLength = 0.0;
 
-//   // DITHERING
-// 	vec2 seed = fract(uv * 2.0) / 2.0 + sin(u_time / 2.0);
+  const float h = 0.1;
 
-// 	// w: weighting factor
-// 	float localDensity = 0.0, totalDensity = 0.0, w = 0.0;
+	vec4 sum = vec4(0.0);
 
-// 	// t: length of the ray
-// 	// d: distance function
-// 	float d = 1.0, t = 0.0;
+  float min_dist = 0.0;
+  float max_dist = 0.0;
 
-//   const float h = 0.1;
+  // march ray to the sphere
+  if (RaySphereIntersect(rayOrigin, rayDirection, 2.5, min_dist, max_dist))
+  {
+    // if t < min_dist return 0
+    // if t >= min_dist return 1
+	  rayLength = min_dist * step(rayLength, min_dist);
 
-// 	vec4 sum = vec4(0.0);
+    // raymarch loop
+    for (int i = 0; i < 56; i++)
+    {
+      vec3 pos = rayOrigin + rayLength * rayDirection;
 
-//   float min_dist = 0.0, max_dist = 0.0;
+      // t > 10.0 - clipping
+      // d < 0.1 * rayLength - was mistake gets cutoff effect
+      if (totalDensity > 0.9 || rayLength > 10.0 || sum.a > 0.99 || rayLength > max_dist) {
+        break;
+      }
 
+      // evaluate distance function
+      dist = densityFunction(pos);
 
-//   // march ray to the sphere
-//   if (RaySphereIntersect(rayOrigin, rayDirection, min_dist, max_dist))
-//   {
-//     // if t < min_dist return 0
-//     // if t >= min_dist return 1
-// 	  t = min_dist * step(t, min_dist);
+      // change this string to control density
+      // d = max(d, 0.5 * u_control1);
 
-//     // raymarch loop
-//     for (int i = 0; i < 56; i++)
-//     {
-//       vec3 pos = rayOrigin + t * rayDirection;
+      // point light calculations
+      vec3 ldst = vec3(0.0) - pos;
+      float lDist = max(length(ldst), 0.001);
 
-//       // t > 10.0 - clipping
-//       if (totalDensity > 0.9 || d < 0.1 * t || t > 10.0 || sum.a > 0.99 || t > max_dist) {
-//         break;
-//       }
+      // star in center
+      vec3 lightColor = vec3(1.0, 0.5, 0.25);
+      // star itself and bloom around the light
+      sum.rgb += (lightColor / (lDist * lDist) / 30.0);
 
-//       // evaluate distance function
-//       float d = mapNebulaDensity(pos);
+      if (dist < h)
+      {
 
-//       // change this string to control density
-//       d = max(d, 0.07);
+        // compute local density
+        localDensity = h - dist;
 
-//       // point light calculations
-//       vec3 ldst = vec3(0.0) - pos;
-//       float lDist = max(length(ldst), 0.001);
+        // compute weighting factor
+        w = (1.0 - totalDensity) * localDensity;
 
-//       // star in center
-//       vec3 lightColor = vec3(1.0, 0.5, 0.25);
-//       // star itself and bloom around the light
-//       sum.rgb += (lightColor / (lDist * lDist) / 30.0);
+        // accumulate density
+        totalDensity += w + 1.0/200.0;
 
-//       if (d < h)
-//       {
+        vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
 
-//         // compute local density
-//         localDensity = h - d;
+        // uniform scale density
+        col.a *= 0.185;
+        // colour by alpha
+        col.rgb *= col.a;
+        // alpha blend in contribution
+        sum = sum + col*(1.0 - sum.a);
+      }
 
-//         // compute weighting factor
-//         w = (1.0 - totalDensity) * localDensity;
+      // still add density, even if not hit
+      totalDensity += 1.0/70.0;
 
-//         // accumulate density
-//         totalDensity += w + 1.0/200.0;
+      // enforce minimum stepsize
+      dist = max(dist, 0.04);
 
-//         vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
+      // DITHERING
+      dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
 
-//         // uniform scale density
-//         col.a *= 0.185;
-//         // colour by alpha
-//         col.rgb *= col.a;
-//         // alpha blend in contribution
-//         sum = sum + col*(1.0 - sum.a);
-//       }
+      // trying to optimize step size near the camera and near the light source
+      rayLength += max(dist * 0.1 * max(min(length(ldst), length(rayOrigin)), 1.0), 0.02);
+    }
+    // simple scattering
+	  sum *= 1.0 / exp(localDensity * 0.2) * 0.6;
+   	sum = clamp(sum, 0.0, 1.0);
+    sum.xyz = sum.xyz * sum.xyz * (3.0 - 2.0 * sum.xyz);
+	}
 
-//       // still add density, even if not hit
-//       totalDensity += 1.0/70.0;
-
-//       // enforce minimum stepsize
-//       d = max(d, 0.04);
-
-//       // DITHERING
-//       d = abs(d) * (0.8 + 0.2 * rand(seed * vec2(i)));
-
-//       // trying to optimize step size near the camera and near the light source
-//       t += max(d * 0.1 * max(min(length(ldst), length(rayOrigin)), 1.0), 0.02);
-//     }
-//     // simple scattering
-// 	  sum *= 1.0 / exp(localDensity * 0.2) * 0.6;
-//    	sum = clamp(sum, 0.0, 1.0);
-//     sum.xyz = sum.xyz * sum.xyz * (3.0 - 2.0 * sum.xyz);
-// 	}
-
-//   debugColor = sum.xyz;
+  return sum.xyz;
 
 //   // BACKGROUND
 //   // if (totalDensity < 0.8)
@@ -608,20 +599,12 @@ const float mouseFactor = 0.002;
 //   debugColor += stars(polarNormalize(polar1).yz, 5.43141);
 //   debugColor += stars(polarNormalize(polar2).yz, 6.4324);
 //   debugColor += stars(polarNormalize(polar3).yz, 7.11231);
-  vec3 col = vec3(0.0);
-
-  // art of code' ro and rd
-  // vec3 rayOrigin = vec3(0.0, 2.0, -2.0);
-  // rayOrigin.yz *= Rot(-u_mouseY * mouseFactor * PI + 1.0);
-  // rayOrigin.xz *= Rot(-u_mouseX * mouseFactor * TAU);
-  // vec3 rayDirection = GetRayDir(uv, rayOrigin, vec3(0.0, 1.0, 0.0), 1.0);
 }
 
 void main()
 {
-
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
+	vec3 rayOrigin = vec3(0.0, 0.0, -(2.0 + u_scrollValue * 4.0));
 
   const float mouseFactor = 0.002;
   R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
@@ -629,10 +612,13 @@ void main()
   R(rayOrigin.yz, -u_mouseY * mouseFactor * PI * 2.0);
   R(rayOrigin.xz, u_mouseX * mouseFactor * PI * 2.0);
 
-  float denisityIntegral = rayMarchDensity(rayOrigin, rayDirection);
-  vec3 col = vec3(denisityIntegral);
+  // float denisityIntegral = rayMarchDensity(rayOrigin, rayDirection);
+  // vec3 col = vec3(denisityIntegral);
 
-  col += rayMarch(rayOrigin, rayDirection);
+  // draw line
+  // col += rayMarch(rayOrigin, rayDirection);
+
+  vec3 col = nebulaMarch(rayOrigin, rayDirection);
 
   // TESTS
 
