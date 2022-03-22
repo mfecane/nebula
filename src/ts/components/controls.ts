@@ -3,8 +3,11 @@ let control2: HTMLInputElement
 let control3: HTMLInputElement
 let control4: HTMLInputElement
 let control5: HTMLInputElement
+let control6: HTMLInputElement
+let control7: HTMLInputElement
+let control8: HTMLInputElement
 let controls: HTMLElement
-const values: number[] = [50, 50, 50, 50, 50, 50]
+const values: number[] = [50, 50, 50, 50, 50, 50, 50, 50, 50]
 
 const handleInput = function (index: number, e: InputEvent): void {
   values[index] = e.target.value
@@ -21,6 +24,9 @@ export const init = function (): void {
   control3 = document.getElementById('sliderValue3')
   control4 = document.getElementById('sliderValue4')
   control5 = document.getElementById('sliderValue5')
+  control6 = document.getElementById('sliderValue6')
+  control7 = document.getElementById('sliderValue7')
+  control8 = document.getElementById('sliderValue8')
 
   controls = document.querySelector('.controls')
   controls.addEventListener('mousedown', (e) => {
@@ -32,4 +38,7 @@ export const init = function (): void {
   control3.addEventListener('input', handleInput.bind(null, 3))
   control4.addEventListener('input', handleInput.bind(null, 4))
   control5.addEventListener('input', handleInput.bind(null, 5))
+  control6.addEventListener('input', handleInput.bind(null, 6))
+  control7.addEventListener('input', handleInput.bind(null, 7))
+  control8.addEventListener('input', handleInput.bind(null, 8))
 }

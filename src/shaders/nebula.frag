@@ -17,6 +17,9 @@ uniform float u_control2;
 uniform float u_control3;
 uniform float u_control4;
 uniform float u_control5;
+uniform float u_control6;
+uniform float u_control7;
+uniform float u_control8;
 
 #define ROTATION
 //#define MOUSE_CAMERA_CONTROL
@@ -365,6 +368,13 @@ float densitySphere(vec3 p) {
   return 0.0;
 }
 
+float densityFunction2(vec3 p) {
+  float noise = mapNebulaDensity(3.0 * p + vec3(1.0));
+
+  return clamp(map2(noise, -2.5 + 5.0 * u_control3, u_control4 * 8.0, 0.0, 1.0), 0.0, 1.0); // * densitySphere(p);
+  // return densitySphere(p);
+}
+
 float densityFunction(vec3 p) {
   float noise = mapNebulaDensity(3.0 * p + vec3(1.0));
 
@@ -484,7 +494,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 	float dist = 1.0;
   float rayLength = 0.0;
 
-  const float h = 0.1;
+  float hitDist = 0.3 * u_control1; // tweak this smaller, gives volume
 
 	vec4 sum = vec4(0.0);
 
@@ -510,7 +520,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       }
 
       // evaluate distance function
-      dist = densityFunction(pos);
+      dist = densityFunction2(pos);
 
       // change this string to control density
       // d = max(d, 0.5 * u_control1);
@@ -520,51 +530,65 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       float lDist = max(length(ldst), 0.001);
 
       // star in center
-      vec3 lightColor = vec3(1.0, 0.5, 0.25);
+      vec3 lightColor = vec3(1.0, 0.6 + pos.z * 0.3, 0.4 + pos.x * 0.2);
       // star itself and bloom around the light
-      sum.rgb += (lightColor / (lDist * lDist) / 30.0);
+      sum.rgb += (lightColor / (pow(lDist, 1.5)) / (80.0 * u_control5));
 
-      if (dist < h)
+      if (dist < hitDist)
       {
 
         // compute local density
-        localDensity = h - dist;
+        localDensity = hitDist - dist;
 
         // compute weighting factor
         w = (1.0 - totalDensity) * localDensity;
 
         // accumulate density
-        totalDensity += w + 1.0/200.0;
+        totalDensity += w + 1.0 / (100.0); // minor effect
 
         vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
 
         // uniform scale density
-        col.a *= 0.185;
+        col.a *= 0.01; // this shit is lower is better
         // colour by alpha
         col.rgb *= col.a;
         // alpha blend in contribution
-        sum = sum + col*(1.0 - sum.a);
+        sum = sum + col * (1.0 - sum.a);
       }
 
       // still add density, even if not hit
-      totalDensity += 1.0/70.0;
+      // 40.0 is ok
+      // this is like fog
+      totalDensity += 1.0/(40.0);
 
       // enforce minimum stepsize
-      dist = max(dist, 0.04);
+      // minor effect
+      dist = max(dist, 0.1 * u_control8);
 
       // DITHERING
       dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
 
       // trying to optimize step size near the camera and near the light source
-      rayLength += max(dist * 0.1 * max(min(length(ldst), length(rayOrigin)), 1.0), 0.02);
+      rayLength +=
+        max(
+          dist * 0.3 *
+            max(
+              min(
+                length(ldst),
+                length(rayOrigin)
+              ),
+              1.0
+            ),
+          0.02
+        );
     }
     // simple scattering
 	  sum *= 1.0 / exp(localDensity * 0.2) * 0.6;
    	sum = clamp(sum, 0.0, 1.0);
+    // this make s it burn
+    sum.a = totalDensity;
     sum.xyz = sum.xyz * sum.xyz * (3.0 - 2.0 * sum.xyz);
 	}
-
-  return sum.xyz;
 
 //   // BACKGROUND
 //   // if (totalDensity < 0.8)
@@ -590,21 +614,23 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 //   //   map2(mapNebulaDensity(polar4) * 4.0, 0.0, 30.0, 0.0, 1.0)
 //   // );
 
-//   // // MY STARS
-//   vec3 polar1 = cartesianToPolar(rayDirection.xzy);
-//   vec3 polar2 = cartesianToPolar(rayDirection.xyz);
-//   R(rayDirection.yz, PI / 2.0);
-//   vec3 polar3 = cartesianToPolar(rayDirection.xyz);
-//   // TODO ::: try optimize
-//   debugColor += stars(polarNormalize(polar1).yz, 5.43141);
-//   debugColor += stars(polarNormalize(polar2).yz, 6.4324);
-//   debugColor += stars(polarNormalize(polar3).yz, 7.11231);
+  // // MY STARS
+  vec3 polar1 = cartesianToPolar(rayDirection.xzy);
+  vec3 polar2 = cartesianToPolar(rayDirection.xyz);
+  R(rayDirection.yz, PI / 2.0);
+  vec3 polar3 = cartesianToPolar(rayDirection.xyz);
+  // TODO ::: try optimize
+  float strz = stars(polarNormalize(polar1).yz, 5.43141);
+  strz += stars(polarNormalize(polar2).yz, 6.4324);
+  strz += stars(polarNormalize(polar3).yz, 7.11231);
+  return mix(sum.xyz, vec3(strz), 1.0 - sum.a);
+  // return vec3(sum);
 }
 
 void main()
 {
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, 0.0, -(2.0 + u_scrollValue * 4.0));
+	vec3 rayOrigin = vec3(0.0, 0.0, -(1.0 + u_scrollValue * 3.0));
 
   const float mouseFactor = 0.002;
   R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
