@@ -366,12 +366,12 @@ float densitySphere(vec3 p) {
 float densityFunction(vec3 p) {
   float noise = mapNebulaDensity(p);
 
-  return map2(noise, -2.0, 7.0, 0.1, 1.0); // * densitySphere(p);
+  return map2(noise, 0.0, 7.0, 0.1, 1.0); // * densitySphere(p);
   // return densitySphere(p);
 }
 
 float rayMarchLight(vec3 rayOrigin, vec3 rayDirection) {
-  float distanceStep = 0.2;
+  float distanceStep = 0.1;
 
   float maxDistance = 0.0;
   float minDistance = 0.0;
@@ -387,7 +387,7 @@ float rayMarchLight(vec3 rayOrigin, vec3 rayDirection) {
     vec3 p = rayOrigin;
     for(int i = 0; i < MAX_STEPS && rayLength < maxDistance; i++) {
       float density = densityFunction(p) * distanceStep;
-      totalDensity *= (1.0 - density * 0.1 * u_control1); // absorption
+      totalDensity *= (1.0 - density * 1.5 * u_control1); // absorption
       if (totalDensity < 0.1) {
         break;
       }
@@ -403,7 +403,11 @@ float rayMarchLight(vec3 rayOrigin, vec3 rayDirection) {
 
 float rayMarchDensity(vec3 rayOrigin, vec3 rayDirection) {
   float distanceStep = 0.05;
-  vec3 lightPos = vec3(0.0, 1.0, 0.0);
+  vec3 lightPos = vec3(
+    0.5 * (cos(u_control2 * 3.0) - sin(u_control2 * 3.0)),
+    1.0,
+    0.5 * (sin(u_control2 * 3.0) + cos(u_control2 * 3.0))
+  );
 
   float maxDistance = 0.0;
   float minDistance = 0.0;
