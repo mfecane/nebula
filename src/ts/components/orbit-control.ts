@@ -8,15 +8,13 @@ let mouseY = 0
 let speedX = 0
 let speedY = 0
 
-let lastScrollValue = 1
 let scrollValue = 1
 let scrollValueMin = 0
 let scrollValueMax = 1
-let scrollStep = 0.25
+let scrollStep = 0.125
+let scrollSpeed = 0
+
 let targetScrollValue = 1
-let scrollTime = 0
-// TODO ::: use time not frames
-let scrollMaxTime = 100
 
 const handleMouseDown = function (e: MouseEvent) {
   mouseDown = true
@@ -71,28 +69,26 @@ const handleScroll = function (e) {
   } else if (value < 0 && targetScrollValue > scrollValueMin) {
     targetScrollValue -= scrollStep
   }
-
-  lastScrollValue = scrollValue
-  scrollTime = 0
 }
 
 const updateScroll = function () {
-  if (
-    Math.abs(lastScrollValue - targetScrollValue) < 0.1 ||
-    scrollTime > scrollMaxTime
-  ) {
-    scrollValue = targetScrollValue
+  if (Math.abs(scrollValue - targetScrollValue) < 0.01) {
+    scrollSpeed = 0
     return
   }
 
-  const val = easeOutCubic(scrollTime / scrollMaxTime)
-  scrollValue = lastScrollValue + val * (targetScrollValue - lastScrollValue)
-  scrollTime += 1
+  const frictionCoefficient = 0.001
+  const accel =
+    (targetScrollValue - scrollValue) * frictionCoefficient - scrollSpeed * 0.08
+
+  scrollSpeed += accel
+  scrollValue += scrollSpeed
 }
 
 export const getMouseControl = function (): [number, number, number] {
-  return [mouseX, mouseY, scrollValue];
+  return [mouseX, mouseY, scrollValue]
 }
+
 export const init = function (): void {
   window.addEventListener('mousemove', handleMouseMove)
   window.addEventListener('mousedown', handleMouseDown)
