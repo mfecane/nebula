@@ -24,14 +24,12 @@ export default class Shader {
 
     gl.compileShader(vertShader, vertSrc)
     if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
-      console.error('Error compiling vertex shader')
-      console.log(gl.getShaderInfoLog(vertShader))
+      this.displayError(vertShader, vertexSource, 'vertex')
     }
 
     gl.compileShader(fragShader, fragSrc)
     if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
-      console.error('Error compiling fragment shader')
-      console.log(gl.getShaderInfoLog(fragShader))
+      this.displayError(fragShader, fragmentSource, 'fragment')
     }
 
     const program = gl.createProgram()
@@ -95,5 +93,28 @@ export default class Shader {
       0,
       0
     )
+  }
+
+  displayError(shader, source, type): void {
+    const re = RegExp('ERROR:\\s+\\d+:(\\d+)', 'g')
+    const error = this.gl.getShaderInfoLog(shader).replace(/\x00/g, '').trim()
+    let msg = `Error compiling ${type} shader: \n${error}\non:`
+    let res
+    const lines = {}
+    while ((res = re.exec(error))) {
+      if (res && res[1]) {
+        const line = parseInt(res[1], 10) - 1
+        if (!isNaN(line)) {
+          lines[line] = true
+        }
+      }
+    }
+    Object.keys(lines).forEach((line) => {
+      const lines = source.split('\n')
+      if (lines[line]) {
+        msg += `\n${line}: ${lines[line].trim()}`
+      }
+    })
+    console.error(msg)
   }
 }
