@@ -11,6 +11,7 @@ uniform float u_time;
 uniform float u_mouseX;
 uniform float u_mouseY;
 uniform float u_scrollValue;
+uniform sampler2D u_Sampler;
 
 uniform float u_control1;
 uniform float u_control2;
@@ -616,21 +617,27 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 
   // // MY STARS
   vec3 polar1 = cartesianToPolar(rayDirection.xzy);
-  vec3 polar2 = cartesianToPolar(rayDirection.xyz);
-  R(rayDirection.yz, PI / 2.0);
-  vec3 polar3 = cartesianToPolar(rayDirection.xyz);
+
+  vec2 starzProj = vec2(
+    (polar1.z) / TAU + 0.5,
+    (polar1.y) / TAU + 0.5
+  );
+  vec4 strz = texture(u_Sampler, starzProj, 0.0);
+
   // TODO ::: try optimize
-  float strz = stars(polarNormalize(polar1).yz, 5.43141);
-  strz += stars(polarNormalize(polar2).yz, 6.4324);
-  strz += stars(polarNormalize(polar3).yz, 7.11231);
-  return mix(sum.xyz, vec3(strz), 1.0 - sum.a);
-  // return vec3(sum);
+  // float strz = stars(polarNormalize(polar1).yz, 5.43141);
+  // strz += stars(polarNormalize(polar2).yz, 6.4324);
+  // strz += stars(polarNormalize(polar3).yz, 7.11231);
+
+
+  return mix(sum.xyz, strz.rgb, 1.0 - sum.a);
+  // return vec3(strz.rgb);
 }
 
 void main()
 {
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, 0.0, -(1.0 + u_scrollValue * 3.0));
+	vec3 rayOrigin = vec3(0.0, 0.0, -(0.5 + u_scrollValue * 1.0));
 
   const float mouseFactor = 0.002;
   R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);

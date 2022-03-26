@@ -1,4 +1,4 @@
-import { init, animate } from 'ts/components/render-texture'
+import { init, animate } from 'ts/components/render-texture2'
 
 import 'css/config.scss'
 import 'css/null.scss'

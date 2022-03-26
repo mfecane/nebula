@@ -5,25 +5,26 @@ precision highp float;
 out vec4 FragColor;
 in vec2 uv;
 
-// source https://www.shadertoy.com/view/MsVXWW
+// uniform float u_time;
+// uniform float u_mouseX;
+// uniform float u_mouseY;
+// uniform float u_scrollValue;
 
-uniform float u_time;
-uniform float u_mouseX;
-uniform float u_mouseY;
-uniform float u_scrollValue;
-
-uniform float u_control1;
-uniform float u_control2;
-uniform float u_control3;
-uniform float u_control4;
-uniform float u_control5;
-uniform float u_control6;
-uniform float u_control7;
-uniform float u_control8;
+// uniform float u_control1;
+// uniform float u_control2;
+// uniform float u_control3;
+// uniform float u_control4;
+// uniform float u_control5;
+// uniform float u_control6;
+// uniform float u_control7;
+// uniform float u_control8;
 
 $simplex-noise
 $spiral-noise
 $map
+
+#define PI  3.14159265358
+#define TAU 6.28318530718
 
 float mod289(in float x) {
   return x - floor(x * (1. / 289.)) * 289.;
@@ -76,7 +77,7 @@ vec3 NebulaNoise(vec3 p)
   float pbmSimplexNoise;
 
   spiralNoise = chunkSpiralNoise3(p);
-  spiralNoise += u_control1 * 0.144 * chunkSpiralNoise3(2.64356 * p.zxy + vec3(1.1231, 2.5321, 4.1445));
+  spiralNoise += 0.72 * chunkSpiralNoise3(2.64356 * p.zxy + vec3(1.1231, 2.5321, 4.1445));
 
   pbmSimplexNoise = pbm_simplex_noise3(p);
 
@@ -128,12 +129,13 @@ vec3 stars(vec3 p) {
 
 void main()
 {
-  vec2 uv1 = uv * 1.6;
+  vec2 uv1 = uv * 1.0;
 
+  // polar to cartesian
   vec3 pos = vec3(
-    sin(uv1.x) * cos(uv1.y),
-    cos(uv1.x) * cos(uv1.y),
-    sin(uv1.y)
+    sin(uv1.x * PI) * cos(uv1.y * PI),
+    cos(uv1.x * PI) * cos(uv1.y * PI),
+    sin(uv1.y * PI)
   );
 
   // vec3 col = vec3(Noise31(floor(pos * 20.0)) * 0.3);
@@ -146,9 +148,9 @@ void main()
 
   // check spiral noise
 
-  pos += vec3(NebulaNoise(pos) * 1.0);
-  vec3 neb = NebulaNoise(pos);
-  col = mix(vec3(0.6, 0.1, 0.8), vec3(0.4, 0.6, 0.4), neb.x) * neb.y;
+  vec3 neb = NebulaNoise(vec3(NebulaNoise(pos) * 1.0));
+
+  col = mix(vec3(0.6, 0.1, 0.8), vec3(0.4, 0.6, 0.4), neb.x) * neb.y * 0.4;
 
   vec3 st = stars(pos * 15.0) * 2.0;
   col += st;
