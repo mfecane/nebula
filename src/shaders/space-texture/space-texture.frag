@@ -146,7 +146,7 @@ void main()
 
   // check spiral noise
 
-  pos += vec3(NebulaNoise(pos) / 0.002);
+  pos += vec3(NebulaNoise(pos) * 1.0);
   vec3 neb = NebulaNoise(pos);
   col = mix(vec3(0.6, 0.1, 0.8), vec3(0.4, 0.6, 0.4), neb.x) * neb.y;
 
