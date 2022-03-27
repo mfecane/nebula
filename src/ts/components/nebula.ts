@@ -1,7 +1,7 @@
 import Shader from 'ts/webgl/shader'
 
 import nebulaVertexShaderSource from 'shaders/nebula.vert'
-import nebulaFragmentShaderSource from 'shaders/raymarch.frag'
+import nebulaFragmentShaderSource from 'shaders/fractal.frag'
 import { init as initControls, getValue as getControlValue } from 'ts/components/controls'
 
 import {
