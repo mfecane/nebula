@@ -22,6 +22,7 @@ uniform float u_control8;
 
 #define PI  3.14159265358
 #define TAU 6.28318530718
+#define MAX_DIST 3.0
 
 $simplex-noise
 $space
@@ -67,16 +68,18 @@ vec3 computeColor( float density, float radius )
 
 float densityFunction(vec3 point) {
   // shift space by noise
-  float n = pbm_simplex_noise3(2.0 * point + vec3(u_time * 0.7));
+  float n = pbm_simplex_noise3(2.0 * point + vec3(u_time * 0.4));
   point = point + 1.1345 * n;
 
   // twist space
   point = twistSpace(point.xyz, u_control3 * 2.0);
 
   // plane
-  return length(
+  float dist = length(
     dot(point, vec3(1.0, 1.0, 1.0) + 3.0)
    ) + 0.2;
+
+  return dist * (1.0 - length(point) / 2.5);
 }
 
 
@@ -90,32 +93,8 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
   // DITHERING
 	vec2 seed = fract(uv * 2.0) / 2.0 + sin(u_time / 2.0);
 
-  vec3 lightPos1 = vec3 (
-    1.5 * sin(2.0 * u_control6 * u_time),
-    1.5 * cos(2.0 * u_control6 * u_time),
-    0.0
-  );
-  R(lightPos1.xy, 1.13523);
-  R(lightPos1.xz, 0.54325 + u_time);
-
-  vec3 lightPos2 = vec3 (
-    1.5 * sin(2.0 * u_control6 * u_time),
-    1.5 * cos(2.0 * u_control6 * u_time),
-    0.0
-  );
-  R(lightPos2.xy, 2.52352);
-  R(lightPos2.xz, -1.25356 + u_time);
-
-  vec3 lightPos3 = vec3 (
-    1.5 * sin(2.0 * u_control6 * u_time),
-    1.5 * cos(2.0 * u_control6 * u_time),
-    0.0
-  );
-  R(lightPos3.xy, 0.1557);
-  R(lightPos3.xz, -2.53251 + u_time);
-
-	// w: weighting factor
-	float localDensity = 0.0, totalDensity = 0.0, w = 0.0;
+  float totalTranslucency = 1.0;
+  float localTranslucency = 0.0;
 
 	// t: length of the ray
 	// d: distance function
@@ -137,13 +116,10 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 	  rayLength = min_dist * step(rayLength, min_dist);
 
     // raymarch loop
-    for (int i = 0; i < 56; i++)
-    {
+    for (int i = 0; i < 56; i++) {
       vec3 pos = rayOrigin + rayLength * rayDirection;
 
-      // t > 10.0 - clipping
-      // d < 0.1 * rayLength - was mistake gets cutoff effect
-      if (totalDensity > 0.9 || rayLength > 10.0 || sum.a > 0.99 || rayLength > max_dist) {
+      if (totalTranslucency < 0.1 || rayLength > MAX_DIST || sum.a > 0.99 || rayLength > max_dist) {
         break;
       }
 
@@ -151,70 +127,11 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       // float pixelate = 100.0 * u_control7;
       // dist = densityFunction(floor(pos * pixelate + 0.5) / pixelate);
       dist = densityFunction(pos) * 0.1;
-
-      // change this string to control density
-      dist = max(dist, 0.5);
-
-      // star itself and bloom around the light
-      sum.rgb += addLight(pos, lightPos1, vec3(1.0, 0.3, 0.2)) * 0.02;
-      sum.rgb += addLight(pos, lightPos2, vec3(0.2, 1.0, 0.5)) * 0.02;
-      sum.rgb += addLight(pos, lightPos3, vec3(0.4, 0.1, 1.0)) * 0.02;
-
-      if (dist < hitDist)
-      {
-
-        // compute local density
-        localDensity = hitDist - dist;
-
-        // compute weighting factor
-        w = (1.0 - totalDensity) * localDensity;
-
-        // accumulate density
-        // totalDensity += w + 1.0 / (2.0); // minor effect
-        // float lDist = length(pos);
-        // vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
-
-        // // uniform scale density
-        // col.a *= 0.005; // this shit is lower is better
-        // // colour by alpha
-        // col.rgb *= col.a;
-        // // alpha blend in contribution
-        // sum = sum + col * (1.0 - sum.a);
-      }
-
-      // still add density, even if not hit
-      // 40.0 is ok
-      // this is like fog
-      totalDensity += 1.0/(20.0) * (1.0 - length(pos));
-
-      // enforce minimum stepsize
-      // minor effect
-      // dist = max(dist, 0.5 * u_control8);
-
-      // DITHERING
-      dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
-
-      // trying to optimize step size near the camera and near the light source
-      rayLength +=
-        max(
-          dist * 0.3 *
-            max(
-              length(rayOrigin),
-              1.0
-            ),
-          0.02
-        );
+      totalTranslucency -= dist;
     }
-    // simple scattering
-	  sum *= 1.0 / exp(localDensity * 0.2) * 0.6;
-   	sum = clamp(sum, 0.0, 1.0);
-
-    // // this make s it burn
-    // sum.a = totalDensity;
-    // sum.xyz = sum.xyz * sum.xyz * (3.0 - 2.0 * sum.xyz);
-	}
-
-  return sum.xyz;
+    sum.rgb += vec3(1.0, 0.0, 0.0) * totalTranslucency;
+  }
+  return sum.rgb;
 }
 
 void main()
