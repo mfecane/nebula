@@ -59,12 +59,14 @@ vec3 pixelateSpace(vec3 point) {
 }
 
 float fractal(vec3 point) {
-  return (length(point) - 1.0);
+  point = -1.0 + 2.0 * fract(point);
+  float r2 = length(point) - 0.2;
+  return r2 * 0.25;
 }
 
 float sceneDistance(vec3 point) {
   // float box = sdBox(p - vec3(0.0, 1.0, 0.0), vec3(1.0));
-  point = twistSpace(point);
+  // point = twistSpace(point);
   // point = pixelateSpace(point);
 
   // float sphereDist = sdSphere(point, 1.0);
@@ -115,8 +117,8 @@ void main() {
   R(rayDirection.xz, rot.y);
   R(rayOrigin.yz, -rot.x);
   R(rayOrigin.xz, rot.y);
-  vec3 col = rayMarch(rayOrigin, rayDirection);
-
+  float d = rayMarch(rayOrigin, rayDirection);
+  vec3 col;
 
   if(d < MAX_DIST) {
       vec3 p = rayOrigin + rayDirection * d;
