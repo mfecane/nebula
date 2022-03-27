@@ -28,51 +28,61 @@ $simplex-noise
 #define TAU 6.28318530718
 
 #define MAX_STEPS 512
-#define MAX_DIST 8.0
-#define SURF_DIST 0.0000001 // hit distance
+#define MAX_DIST 100.0
+#define SURF_DIST 0.01 // hit distance
 
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
 
-vec4 orb;
+vec3 cartesianToPolar (vec3 v)
+{
+	vec3 polar;
+  float HALF_PI = PI / 2.0;
+	polar[0] = length(v);
 
-vec3 twistSpace(vec3 point) {
-  float angle = (1.0 - point.y) * (-PI + u_control5 * TAU);
-
-  return vec3(
-    point.x * sin(angle) + point.z * cos(angle),
-    point.y * u_control3,
-    point.x * - cos(angle) + point.z * sin(angle)
-  );
-}
-
-vec3 pixelateSpace(vec3 point) {
-  vec3 n = vec3(
-    pbm_simplex_noise3(point * 1.0),
-    pbm_simplex_noise3(point * 1.0 + 1.251),
-    pbm_simplex_noise3(point * 1.0 + 2.1414)
-  );
-
-  point.x = point.x + point.x * cos(n.x * 3.0 * u_control1) * u_control2 - point.z * sin(n.x * 3.0 * u_control1) * u_control2;
-  point.z = point.z + point.x * sin(n.x * 3.0 * u_control1) * u_control2 + point.z * cos(n.x * 3.0 * u_control1) * u_control2;
-
-  return point;
+	if (v[2] > 0.0f) {
+		polar[1] = atan(sqrt (v[0] * v[0]+ v[1] * v[1]) / v[2]);
+	}
+	else if (v[2] < 0.0f) {
+		polar[1] = atan(sqrt(v[0] * v[0]+ v[1] * v[1]) / v[2]) + PI;
+	}
+	else {
+		polar[1] = PI * 0.5f;
+	}
+	polar[ 1 ] -= HALF_PI;
+	if (v[0] != 0.0f) {
+        polar[2] = clamp(atan (v[1], v[0]), -PI, PI);
+    }
+	else if (v[1] > 0.0) {
+		polar[2] = PI * 0.5f;
+	}
+	else {
+		polar[2] = -PI * 0.5;
+	}
+	return polar;
 }
 
 float fractal(vec3 point) {
-  point = -1.0 + 2.0 * fract(point);
-  float r2 = length(point) - 0.2;
-  return r2 * 0.25;
+  vec3 p = cartesianToPolar(point.zxy);
+  p.x = sqrt(p.x);
+  p.y = p.y * 6.0/ PI;
+  p.z = p.z * 6.0/ PI;
+
+	vec4 orb = vec4(10.0);
+	float scale = 1.0;
+
+	for (int i = 0; i < 8; i++) {
+		p = -1.0 + 2.0 * fract(0.5 * p + 0.5);
+		float r2 = dot(p, p);
+    orb = min(orb, vec4(abs(p), r2));
+		float k = 2.3 *  u_control1 / r2;
+		p *= k;
+		scale *= k;
+	}
+
+	return 0.4 * abs(p.x) / scale;
 }
 
 float sceneDistance(vec3 point) {
-  // float box = sdBox(p - vec3(0.0, 1.0, 0.0), vec3(1.0));
-  // point = twistSpace(point);
-  // point = pixelateSpace(point);
-
-  // float sphereDist = sdSphere(point, 1.0);
-  // float gyroid = sdGyroid(point, 5.0);
-  // float d = smin(sphereDist, gyroid * 0.9, 0.07);
-
   return fractal(point);
 }
 
@@ -106,7 +116,7 @@ float rayMarch(vec3 ro, vec3 rd) {
 void main() {
   const float mouseFactor = 0.0005;
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, 0.0, -0.5 - u_scrollValue * 4.0);
+	vec3 rayOrigin = vec3(0.0, 4.0, -0.5 - u_scrollValue * 8.0);
 
   vec2 rot = vec2(
     u_mouseY * mouseFactor * PI * 2.0,
