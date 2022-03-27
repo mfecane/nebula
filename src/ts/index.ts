@@ -1,4 +1,4 @@
-import { init, animate } from 'ts/components/render-texture2'
+import { init, animate } from 'ts/components/nebula'
 
 import 'css/config.scss'
 import 'css/null.scss'

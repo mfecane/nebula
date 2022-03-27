@@ -524,7 +524,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       dist = densityFunction2(pos);
 
       // change this string to control density
-      // d = max(d, 0.5 * u_control1);
+      dist = max(dist, 0.5 * u_control1);
 
       // point light calculations
       vec3 ldst = vec3(0.0) - pos;
@@ -550,7 +550,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
         vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
 
         // uniform scale density
-        col.a *= 0.01; // this shit is lower is better
+        col.a *= 0.005; // this shit is lower is better
         // colour by alpha
         col.rgb *= col.a;
         // alpha blend in contribution
