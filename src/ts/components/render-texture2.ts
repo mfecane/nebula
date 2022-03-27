@@ -2,7 +2,7 @@ import Shader from 'ts/webgl/shader'
 import Texture from 'ts/webgl/texture'
 
 import nebulaVertexShaderSource from 'shaders/nebula.vert'
-import nebulaFragmentShaderSource from 'shaders/nebula.frag'
+import nebulaFragmentShaderSource from 'shaders/nebula-plane.frag'
 
 import environmentVertexShaderSource from 'shaders/space-texture/space-texture.vert'
 import environmentFragmentShaderSource from 'shaders/space-texture/space-texture.frag'
