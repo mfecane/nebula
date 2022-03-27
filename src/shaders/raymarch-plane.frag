@@ -68,18 +68,16 @@ vec3 computeColor( float density, float radius )
 
 float densityFunction(vec3 point) {
   // shift space by noise
-  float n = pbm_simplex_noise3(2.0 * point + vec3(u_time * 0.4));
-  point = point + 1.1345 * n;
+  float n = pbm_simplex_noise3(point);
+  vec3 point2 = point + 1.1345 * n;
 
   // twist space
-  point = twistSpace(point.xyz, u_control3 * 2.0);
+  point2 = twistSpace(point2.xyz, 2.0);
 
   // plane
-  float dist = length(
-    dot(point, vec3(1.0, 1.0, 1.0) + 3.0)
-   ) + 0.2;
+  float dist = 2.0 - abs(dot(point2, vec3(1.0, 1.0, 1.0)));
 
-  return dist * (1.0 - length(point) / 2.5);
+  return clamp(dist * (1.6 * 1.6 - dot(point, point)), 0.0, 1.0);
 }
 
 
@@ -98,38 +96,36 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 
 	// t: length of the ray
 	// d: distance function
-	float dist = 1.0;
   float rayLength = 0.0;
 
-  float hitDist = 0.004; // tweak this smaller, gives volume
-
-	vec4 sum = vec4(0.0);
+	vec4 sum = vec4(vec3(0.0), 1.0);
+  float dist;
 
   float min_dist = 0.0;
   float max_dist = 0.0;
+  float rayStep = 0.05;
 
   // march ray to the sphere
   if (RaySphereIntersect(rayOrigin, rayDirection, 2.5, min_dist, max_dist))
   {
+
     // if t < min_dist return 0
     // if t >= min_dist return 1
-	  rayLength = min_dist * step(rayLength, min_dist);
+	  rayLength = min_dist;
 
     // raymarch loop
-    for (int i = 0; i < 56; i++) {
+    for (int i = 0; i < 512; i++) {
       vec3 pos = rayOrigin + rayLength * rayDirection;
 
-      if (totalTranslucency < 0.1 || rayLength > MAX_DIST || sum.a > 0.99 || rayLength > max_dist) {
+      if (totalTranslucency < 0.1 || rayLength > MAX_DIST || rayLength > max_dist) {
         break;
       }
 
-      // evaluate distance function
-      // float pixelate = 100.0 * u_control7;
-      // dist = densityFunction(floor(pos * pixelate + 0.5) / pixelate);
-      dist = densityFunction(pos) * 0.1;
+      dist = densityFunction(pos) * rayStep * 0.2;
       totalTranslucency -= dist;
+      rayLength += rayStep;
     }
-    sum.rgb += vec3(1.0, 0.0, 0.0) * totalTranslucency;
+    sum.rgb = vec3(1.0, 1.0, 1.0) * (1.0 - totalTranslucency);
   }
   return sum.rgb;
 }
@@ -148,4 +144,6 @@ void main()
   vec3 col = nebulaMarch(rayOrigin, rayDirection);
 
   FragColor = vec4(col, 1.0);
+
+  // FragColor = vec4(vec3(densityFunction(vec3(uv, 1.0))), 1.0);
 }
