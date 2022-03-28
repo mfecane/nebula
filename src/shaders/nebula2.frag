@@ -21,19 +21,8 @@ uniform float u_control7;
 uniform float u_control8;
 
 $rand
+$simplex-noise
 
-#define ROTATION
-//#define MOUSE_CAMERA_CONTROL
-
-#define DITHERING
-#define BACKGROUND
-#define MAX_STEPS 200
-#define MAX_DIST 3.0
-#define SURF_DIST 0.00001 // hit distance
-
-//#define TONEMAPPING
-
-//-------------------
 #define PI  3.14159265358
 #define TAU 6.28318530718
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
@@ -101,7 +90,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
   float max_dist = 0.0;
 
   // march ray to the sphere
-  if (RaySphereIntersect(rayOrigin, rayDirection, 2.5, min_dist, max_dist))
+  if (RaySphereIntersect(rayOrigin, rayDirection, 8.0, min_dist, max_dist))
   {
     // if t < min_dist return 0
     // if t >= min_dist return 1
@@ -131,8 +120,12 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 
       // star in center
       vec3 lightColor = vec3(1.0, 0.6 + pos.z * 0.3, 0.4 + pos.x * 0.2);
+
       // star itself and bloom around the light
-      sum.rgb += (lightColor / (pow(lDist, 1.5)) / 40.0);
+      // star itself
+      sum.rgb += (vec3(0.67, 0.75, 1.00) / (lDist * lDist * 10.0) / 80.0);
+      // bloom
+      sum.rgb += (lightColor / exp(lDist * lDist * lDist * 0.08) / 30.0);
 
       if (dist < hitDist)
       {
@@ -148,8 +141,11 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 
         vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
 
+        // emission
+        col += col.a * vec4(col.rgb, 0.0) * 0.2;
+
         // uniform scale density
-        col.a *= 0.185; // this shit is lower is better
+        col.a *= 0.2; // this shit is lower is better
         // colour by alpha
         col.rgb *= col.a;
         // alpha blend in contribution
@@ -166,12 +162,15 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       dist = max(dist, 0.04);
 
       // DITHERING
-      // dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
+      dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
+      // new version
+      // vec2 uv1 = dot(uv, vec2(120.0, 280.0));
+      // dist = abs(dist) * (0.8 + 0.08 * texture(iChannel2, vec2(uv1.y, -uv1.x + 0.5 * sin(4.0 * iTime + uv1.y * 4.0))).r);
 
       // trying to optimize step size near the camera and near the light source
       rayLength +=
         max(
-          dist * 0.02 * u_control1 *
+          dist * 0.1 *
             max(
               min(
                 length(ldst),
@@ -179,7 +178,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
               ),
               1.0
             ),
-          0.02
+          0.01
         );
     }
     // simple scattering
@@ -198,7 +197,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 void main()
 {
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, 0.0, -(0.5 + u_scrollValue * 1.0));
+	vec3 rayOrigin = vec3(0.0, 0.0, -(2.0 + u_scrollValue * 4.0));
 
   const float mouseFactor = 0.002;
   R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
