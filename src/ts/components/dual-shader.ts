@@ -1,12 +1,6 @@
 import Shader from 'ts/webgl/shader'
 import Texture from 'ts/webgl/texture'
 
-import nebulaVertexShaderSource from 'shaders/nebula.vert'
-import nebulaFragmentShaderSource from 'shaders/nebula-plane.frag'
-
-import environmentVertexShaderSource from 'shaders/space-texture/space-texture.vert'
-import environmentFragmentShaderSource from 'shaders/space-texture/space-texture.frag'
-
 import {
   init as initControls,
   getValue as getControlValue,
@@ -110,12 +104,12 @@ const drawImage = function (): void {
   gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0)
 }
 
-const renderSkyTexture = function (): void {
+const renderSkyTexture = function (options): void {
 
   environmentShader = new Shader(gl)
   environmentShader.createProgram(
-    environmentVertexShaderSource,
-    environmentFragmentShaderSource
+    options.bgVert,
+    options.bgFrag
   )
   environmentShader.setPositions('aPos')
   environmentShader.addUniform('u_MVP', '4fv')
@@ -182,7 +176,7 @@ export const animate = function () {
   requestAnimationFrame(animate)
 }
 
-export const init = function (root) {
+export const init = function (root, options) {
   rootElement = root
   canvas = document.createElement(`canvas`)
   root.appendChild(canvas)
@@ -192,7 +186,7 @@ export const init = function (root) {
 
   createSquarePositions()
 
-  renderSkyTexture()
+  renderSkyTexture(options)
   setCanvasSize()
   window.addEventListener('resize', setCanvasSize)
 
@@ -202,10 +196,9 @@ export const init = function (root) {
 
   nebulaShader = new Shader(gl)
   nebulaShader.createProgram(
-    nebulaVertexShaderSource,
-    nebulaFragmentShaderSource
+    options.mainVert,
+    options.mainFrag
   )
-
 
   nebulaShader.useProgram()
   nebulaShader.setPositions('aPos')

@@ -68,7 +68,7 @@ vec3 ToneMapFilmicALU(vec3 _color)
 }
 
 float densityFunction(vec3 point) {
-  float n = pbm_simplex_noise3(point) * 1.4;
+  float n = pbm_simplex_noise3(point);
   point = twistSpace(
     point, 0.08
   );
@@ -97,7 +97,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
   float max_dist = 0.0;
 
   // march ray to the sphere
-  if (RaySphereIntersect(rayOrigin, rayDirection, 5.0, min_dist, max_dist))
+  if (RaySphereIntersect(rayOrigin, rayDirection, 4.0, min_dist, max_dist))
   {
     // if t < min_dist return 0
     // if t >= min_dist return 1
@@ -111,35 +111,18 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       // t > 10.0 - clipping
       // d < 0.1 * rayLength - was mistake gets cutoff effect
 
-      // to check depth
-      // if (rayLength > 4.0 ) {
-      //   // totalDensity = smoothstep(dist, 0.08 * rayLength, 0.0);
-      //   return vec3(1.0, 0.0, 0.0);
-      //   totalDensity = 1.0;
-      //   break;
-      // }
-
-      // to check rayLength
-      // if (rayLength > max_dist) {
-      //   // totalDensity = smoothstep(dist, 0.08 * rayLength, 0.0);
-      //   return vec3(1.0, 0.0, 0.0);
-      //   totalDensity = 1.0;
-      //   break;
-      // }
-
-      // sum.a > 0.99 was here but it never hits
-      if (totalDensity > 0.9 || rayLength > 10.0  || rayLength > max_dist) {
+      if (totalDensity > 0.9 || rayLength > 10.0 || sum.a > 0.99 || rayLength > max_dist) {
         break;
       }
 
       if (dist < 0.08 * rayLength) {
         // totalDensity = smoothstep(dist, 0.08 * rayLength, 0.0);
-        totalDensity = 1.0;
+        totalDensity = smoothstep(dist, 0.08 * rayLength + 0.02, 0.08 * rayLength);
         break;
       }
 
       // evaluate distance function
-      dist = densityFunction(pos) * smoothstep(2.0, 1.0, length(pos));
+      dist = densityFunction(pos);
 
       // change this string to control density
       dist = max(dist, 0.08);
@@ -194,8 +177,8 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       // DITHERING
       // dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
       // new version
-      // vec2 uv1 = uv * vec2(120.0, 280.0);
-      // dist = abs(dist) * (0.6 + 0.4 * u_control1 * texture(u_Sampler, vec2(uv1.y, -uv1.x + 0.5 * sin(4.0 * u_time + uv1.y * 4.0))).r);
+      // vec2 uv1 = dot(uv, vec2(120.0, 280.0));
+      // dist = abs(dist) * (0.8 + 0.08 * texture(iChannel2, vec2(uv1.y, -uv1.x + 0.5 * sin(4.0 * iTime + uv1.y * 4.0))).r);
 
       // trying to optimize step size near the camera and near the light source
       rayLength +=
@@ -218,8 +201,9 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
     sum.a = totalDensity;
     sum.xyz = sum.xyz * sum.xyz * (3.0 - 2.0 * sum.xyz);
 	}
-  // TONEMAPPING
-  // debugColor = ToneMapFilmicALU(sum.xyz * 2.2);
+
+  //   // TONEMAPPING
+  //   debugColor = ToneMapFilmicALU(sum.xyz * 2.2);
 
   vec3 polar = cartesianToPolar(rayDirection.xzy);
   vec2 starzProj = vec2(
