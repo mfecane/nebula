@@ -73,7 +73,7 @@ float densityFunction(vec3 point) {
     point, 0.08
   );
 
-  return abs(dot(point, vec3(sin(n), sin(n), 1.0)) - 0.5);
+  return abs(dot(point, vec3(sin(n) * 1.1, sin(n) * 1.3, 1.0)) - 0.5);
 }
 
 vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
@@ -132,14 +132,16 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
         break;
       }
 
-      if (dist < 0.08 * rayLength) {
+      if (dist < 0.09 * rayLength) {
         // totalDensity = smoothstep(dist, 0.08 * rayLength, 0.0);
         totalDensity = 1.0;
         break;
       }
 
       // evaluate distance function
-      dist = densityFunction(pos) * smoothstep(2.0, 1.0, length(pos));
+      // dist = densityFunction(pos) * smoothstep(2.0, 1.0, length(pos)); // cool volumetric effect
+
+      dist = densityFunction(pos) * smoothstep(5.0, 4.5, length(pos)); // cool volumetric effect
 
       // change this string to control density
       dist = max(dist, 0.08);
@@ -167,7 +169,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
         w = (1.0 - totalDensity) * localDensity;
 
         // accumulate density
-        totalDensity += w + 1.0 / 200.0; // minor effect
+        totalDensity += w + 0.05; // minor effect
 
         vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
 
@@ -183,9 +185,8 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       }
 
       // still add density, even if not hit
-      // 40.0 is ok
       // this is like fog
-      totalDensity += 1.0 / (70.0);
+      totalDensity += 0.018; // this
 
       // enforce minimum stepsize
       // minor effect
@@ -228,7 +229,10 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
   );
   vec4 strz = texture(u_Sampler, starzProj, 0.0);
 
-  return mix(sum.rgb, strz.rgb, 1.0 - sum.a);
+  return mix(sum.rgb, strz.rgb, 1.0 - pow(sum.a, 0.2));
+  //return mix(sum.rgb, strz.rgb, 1.0 - sum.a);
+
+  // return sum.rgb;
 }
 
 void main()
