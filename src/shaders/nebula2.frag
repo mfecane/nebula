@@ -20,12 +20,14 @@ uniform float u_control6;
 uniform float u_control7;
 uniform float u_control8;
 
-$rand
-$simplex-noise
-
 #define PI  3.14159265358
 #define TAU 6.28318530718
+
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
+
+$rand
+$simplex-noise
+$space
 
 // assign color to the media
 vec3 computeColor( float density, float radius )
@@ -66,7 +68,12 @@ vec3 ToneMapFilmicALU(vec3 _color)
 }
 
 float densityFunction(vec3 point) {
-  return abs(dot(point, vec3(1.0, 1.0, 1.0)));
+  float n = pbm_simplex_noise3(point);
+  point = twistSpace(
+    point, 0.08
+  );
+
+  return abs(dot(point, vec3(sin(n), sin(n), 1.0)) - 0.5);
 }
 
 vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
@@ -90,7 +97,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
   float max_dist = 0.0;
 
   // march ray to the sphere
-  if (RaySphereIntersect(rayOrigin, rayDirection, 8.0, min_dist, max_dist))
+  if (RaySphereIntersect(rayOrigin, rayDirection, 4.0, min_dist, max_dist))
   {
     // if t < min_dist return 0
     // if t >= min_dist return 1
@@ -104,7 +111,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       // t > 10.0 - clipping
       // d < 0.1 * rayLength - was mistake gets cutoff effect
 
-      if (totalDensity > 0.9 || dist < 0.1 * rayLength || rayLength > 10.0 || sum.a > 0.99 || rayLength > max_dist) {
+      if (totalDensity > 0.9 || dist < 0.08 * rayLength || rayLength > 10.0 || sum.a > 0.99 || rayLength > max_dist) {
         break;
       }
 
@@ -123,7 +130,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 
       // star itself and bloom around the light
       // star itself
-      sum.rgb += (vec3(0.67, 0.75, 1.00) / (lDist * lDist * 10.0) / 80.0);
+      // sum.rgb += (vec3(0.67, 0.75, 1.00) / (lDist * lDist * 10.0) / 80.0);
       // bloom
       sum.rgb += (lightColor / exp(lDist * lDist * lDist * 0.08) / 30.0);
 
@@ -162,7 +169,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       dist = max(dist, 0.04);
 
       // DITHERING
-      dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
+      // dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
       // new version
       // vec2 uv1 = dot(uv, vec2(120.0, 280.0));
       // dist = abs(dist) * (0.8 + 0.08 * texture(iChannel2, vec2(uv1.y, -uv1.x + 0.5 * sin(4.0 * iTime + uv1.y * 4.0))).r);
@@ -196,14 +203,19 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 
 void main()
 {
-  vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, 0.0, -(2.0 + u_scrollValue * 4.0));
+  vec3 rayDirection = normalize(vec3(-uv.x, -uv.y, -1.0));
+  // wow
+	// vec3 rayOrigin = normalize(vec3(-2.0 + 4.0 *  u_control1, -0.4, 2.0)) * (0.5 + u_scrollValue * 1.5);
+	vec3 rayOrigin = vec3(0, 0, (0.5 + u_scrollValue * 1.5)) ;
 
   const float mouseFactor = 0.002;
-  R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
-  R(rayDirection.xz, u_mouseX * mouseFactor * PI * 2.0);
-  R(rayOrigin.yz, -u_mouseY * mouseFactor * PI * 2.0);
-  R(rayOrigin.xz, u_mouseX * mouseFactor * PI * 2.0);
+
+  float angl1 = -u_mouseY - 15.0, angl2 = (u_mouseX + 25.0);
+
+  R(rayDirection.yz, angl1 * mouseFactor * PI * 2.0);
+  R(rayDirection.xz, angl2 * mouseFactor * PI * 2.0);
+  R(rayOrigin.yz, angl1 * mouseFactor * PI * 2.0);
+  R(rayOrigin.xz, angl2 * mouseFactor * PI * 2.0);
 
   // float denisityIntegral = rayMarchDensity(rayOrigin, rayDirection);
   // vec3 col = vec3(denisityIntegral);

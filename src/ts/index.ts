@@ -17,6 +17,7 @@ const raymarchGyroid = function(canvasContainer) {
 }
 
 const raymarchNebula = function(canvasContainer) {
+  // should actually add background
   singleShaderInit(canvasContainer, squareVert, nebulaPlaneFrag)
   singleShaderAnimate()
 }
