@@ -1,6 +1,6 @@
 float sdGyroid(vec3 p, float scale) {
   p *= scale;
-  return abs(dot(sin(p), cos(p.zxy))) / scale - 0.16;
+  return abs(dot(sin(p), cos(p.zxy)) - 0.7) / scale - 0.7;
 }
 
 float sdBox(vec3 p, vec3 s) {
