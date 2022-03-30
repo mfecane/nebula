@@ -89,12 +89,18 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
   float rayLength = 0.0;
 
   // smaller > gives volume, default = 0.2
-  float hitDist = 0.1;
 
 	vec4 sum = vec4(0.0);
 
   float min_dist = 0.0;
   float max_dist = 0.0;
+  float rayStep = 0.0;
+  float invStep = 0.0;
+
+  float quality = (1.0 - u_control1);
+
+  // mainly controls thickness
+  float hitDist = 0.2 / (1.0 - quality * 0.4);
 
   // march ray to the sphere
   if (RaySphereIntersect(rayOrigin, rayDirection, 5.0, min_dist, max_dist))
@@ -107,6 +113,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
     for (int i = 0; i < 56; i++)
     {
       vec3 pos = rayOrigin + rayLength * rayDirection;
+      invStep = (1.0 - rayStep / 20.0 / u_control2);
 
       // t > 10.0 - clipping
       // d < 0.1 * rayLength - was mistake gets cutoff effect
@@ -132,23 +139,28 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
         break;
       }
 
-      if (dist < 0.09 * rayLength) {
-        // totalDensity = smoothstep(dist, 0.08 * rayLength, 0.0);
-        totalDensity = 1.0;
-        break;
-      }
+      // why?
+      // if (dist < 0.04 * rayLength) {
+      //   // totalDensity = smoothstep(dist, 0.08 * rayLength, 0.0);
+      //   totalDensity = 1.0;
+      //   break;
+      // }
 
       // evaluate distance function
       // dist = densityFunction(pos) * smoothstep(2.0, 1.0, length(pos)); // cool volumetric effect
 
-      dist = densityFunction(pos) * smoothstep(5.0, 4.5, length(pos)); // cool volumetric effect
+      dist = densityFunction(pos) * smoothstep(5.0, 4.7, length(pos));
+
+      // if(dist < 0.05) {
+      //   return vec3(1.0, 0.0, 0.0);
+      // }
 
       // change this string to control density
-      dist = max(dist, 0.08);
+      // dist = max(dist, 0.1 * u_control3);
 
       // point light calculations
       vec3 ldst = vec3(0.0) - pos;
-      float lDist = max(length(ldst), 0.001);
+      float lDist = length(ldst);
 
       // star in center
       vec3 lightColor = vec3(1.0, 0.6 + pos.z * 0.3, 0.4 + pos.x * 0.2);
@@ -157,7 +169,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       // star itself
       // sum.rgb += (vec3(0.67, 0.75, 1.00) / (lDist * lDist * 10.0) / 80.0);
       // bloom
-      sum.rgb += (lightColor / exp(lDist * lDist * lDist * 0.08) / 30.0);
+      sum.rgb += (lightColor / exp(lDist * lDist * lDist * 0.2) / invStep / 10.0);
 
       if (dist < hitDist)
       {
@@ -166,18 +178,18 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
         localDensity = hitDist - dist;
 
         // compute weighting factor
-        w = (1.0 - totalDensity) * localDensity;
+        w = (1.0 - totalDensity) * localDensity * 0.2;
 
         // accumulate density
-        totalDensity += w + 0.05; // minor effect
+        totalDensity += (w + 0.5 * invStep); // minor effect
 
         vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
 
         // emission
-        col += col.a * vec4(col.rgb, 0.0) * 0.2;
+        col += col.a * vec4(col.rgb, 0.0);
 
         // uniform scale density
-        col.a *= 0.2; // this shit is lower is better
+        col.a *= 0.1; // this shit is lower is better
         // colour by alpha
         col.rgb *= col.a;
         // alpha blend in contribution
@@ -186,41 +198,33 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 
       // still add density, even if not hit
       // this is like fog
-      totalDensity += 0.018; // this
-
-      // enforce minimum stepsize
-      // minor effect
-      dist = max(dist, 0.04);
+      totalDensity += 0.03 *  invStep; // this
 
       // DITHERING
-      // dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
+      dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
       // new version
       // vec2 uv1 = uv * vec2(120.0, 280.0);
       // dist = abs(dist) * (0.6 + 0.4 * u_control1 * texture(u_Sampler, vec2(uv1.y, -uv1.x + 0.5 * sin(4.0 * u_time + uv1.y * 4.0))).r);
 
       // trying to optimize step size near the camera and near the light source
-      rayLength +=
+
+      rayStep =
         max(
-          dist * 0.1 *
-            max(
-              min(
-                length(ldst),
-                length(rayOrigin)
-              ),
-              1.0
-            ),
-          0.01
+          dist * 0.4 * (1.0 - rayLength / 5.0),
+          0.05 * quality
         );
+      rayLength += rayStep;
     }
     // simple scattering
 	  sum *= 1.0 / exp(localDensity * 0.2) * 0.6;
    	sum = clamp(sum, 0.0, 1.0);
     // this make s it burn
     sum.a = totalDensity;
+    // sum.xyz = sum.xyz * sum.yzx * (3.0 - 2.0 * sum.xyz); // wow
     sum.xyz = sum.xyz * sum.xyz * (3.0 - 2.0 * sum.xyz);
 	}
   // TONEMAPPING
-  // debugColor = ToneMapFilmicALU(sum.xyz * 2.2);
+  // sum.xyz = ToneMapFilmicALU(sum.xyz * 0.5);
 
   vec3 polar = cartesianToPolar(rayDirection.xzy);
   vec2 starzProj = vec2(
