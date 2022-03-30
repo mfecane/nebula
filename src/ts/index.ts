@@ -6,6 +6,7 @@ import fractalFrag from 'shaders/fractal.frag'
 
 import nebulaPlaneFrag from 'shaders/nebula2.frag'
 import starbgFrag from 'shaders/space-texture/space-texture.frag'
+import background2 from 'shaders/background2.frag'
 
 import 'css/config.scss'
 import 'css/null.scss'
@@ -30,7 +31,7 @@ const nebulaWithBg = function(canvasContainer) {
     mainVert: squareVert,
     mainFrag: nebulaPlaneFrag,
     bgVert: squareVert,
-    bgFrag: starbgFrag
+    bgFrag: background2
   }
 
   dualShaderInit(canvasContainer, options)

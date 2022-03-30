@@ -230,9 +230,9 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
   vec4 strz = texture(u_Sampler, starzProj, 0.0);
 
   return mix(sum.rgb, strz.rgb, 1.0 - pow(sum.a, 0.2));
-  //return mix(sum.rgb, strz.rgb, 1.0 - sum.a);
+  // return mix(sum.rgb, strz.rgb, 1.0 - sum.a);
 
-  // return sum.rgb;
+  // return strz.rgb;
 }
 
 void main()
