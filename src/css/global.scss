@@ -25,3 +25,7 @@ body {
   align-items: center;
   gap: 16px;
 }
+
+#fps {
+  grid-column: 1 / span 2;
+}
