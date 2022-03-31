@@ -4,6 +4,8 @@ precision highp float;
 
 out vec4 FragColor;
 in vec2 uv;
+uniform float u_quality;
+uniform float u_control4;
 
 $simplex-noise
 $spiral-noise

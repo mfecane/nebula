@@ -31,6 +31,7 @@ let texture: Texture = null
 let textureWidth = 4048
 let textureHeight = 4048
 let frameBuffer: WebGLBuffer
+let quality = 0.2
 
 const calculateMVP = function (width, height) {
   const left = -width / height
@@ -94,6 +95,7 @@ const drawImage = function (): void {
   nebulaShader.setUniform('u_mouseX', mouseX)
   nebulaShader.setUniform('u_mouseY', mouseY)
   nebulaShader.setUniform('u_scrollValue', scrollValue)
+  nebulaShader.setUniform('u_quality', quality)
   nebulaShader.setUniform('u_control1', getControlValue(1) / 100)
   nebulaShader.setUniform('u_control2', getControlValue(2) / 100)
   nebulaShader.setUniform('u_control3', getControlValue(3) / 100)
@@ -117,6 +119,8 @@ const renderSkyTexture = function (options): void {
   )
   environmentShader.setPositions('aPos')
   environmentShader.addUniform('u_MVP', '4fv')
+  environmentShader.setUniform('u_quality', '1f')
+  environmentShader.setUniform('u_control4', '1f')
 
   texture = new Texture(gl)
   texture.empty(textureWidth, textureHeight)
@@ -153,6 +157,7 @@ const renderSkyTexture = function (options): void {
   calculateMVP(textureWidth, textureHeight)
   environmentShader.useProgram()
   environmentShader.setUniform('u_MVP', proj)
+  environmentShader.setUniform('u_quality', quality )
 
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
   gl.clear(gl.COLOR_BUFFER_BIT)
@@ -231,6 +236,7 @@ export const init = function (root, options) {
   nebulaShader.addUniform('u_mouseX', '1f')
   nebulaShader.addUniform('u_mouseY', '1f')
   nebulaShader.addUniform('u_scrollValue', '1f')
+  nebulaShader.setUniform('u_quality', '1f')
   nebulaShader.addUniform('u_control1', '1f')
   nebulaShader.addUniform('u_control2', '1f')
   nebulaShader.addUniform('u_control3', '1f')

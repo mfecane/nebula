@@ -82,6 +82,22 @@ float simplex_noise3(vec3 v) {
 float pbm_simplex_noise3(vec3 point) {
   int OCTAVES = 6;
 
+  if(0.0 < u_quality && u_quality <= 0.25) {
+    OCTAVES = 2;
+  }
+
+  if(0.25 < u_quality && u_quality <= 0.5) {
+    OCTAVES = 3;
+  }
+
+  if(0.5 < u_quality && u_quality <= 0.75) {
+    OCTAVES = 4;
+  }
+
+  if(0.75 < u_quality && u_quality <= 1.0) {
+    OCTAVES = 5;
+  }
+
   float normalize_vector = 0.0;
   float value = 0.0;
   float scale = 0.5;

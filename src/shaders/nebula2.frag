@@ -1,6 +1,6 @@
 #version 300 es
 
-precision highp float;
+precision mediump float;
 
 out vec4 FragColor;
 in vec2 uv;
@@ -10,6 +10,7 @@ uniform float u_mouseX;
 uniform float u_mouseY;
 uniform float u_scrollValue;
 uniform sampler2D u_Sampler;
+uniform float u_quality;
 
 uniform float u_control1;
 uniform float u_control2;
@@ -68,7 +69,7 @@ vec3 ToneMapFilmicALU(vec3 _color)
 }
 
 float densityFunction(vec3 point) {
-  float n = pbm_simplex_noise3(point * 1.2) * 1.2;
+  float n = pbm_simplex_noise3(point * 1.8) * 1.3;
   point = twistSpace(
     point, 0.14
   );
@@ -163,7 +164,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
       float lDist = length(ldst);
 
       // star in center
-      vec3 lightColor = vec3(1.0, 0.6 + pos.z * 0.3, 0.4 + pos.x * 0.2);
+      vec3 lightColor = vec3(1.0, 0.4 + abs(pos.y) * 0.2, 0.5 + pos.x * 0.5);
 
       // star itself and bloom around the light
       // star itself
