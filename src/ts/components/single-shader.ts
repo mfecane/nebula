@@ -18,6 +18,10 @@ let proj
 let startTime = Date.now()
 let time = startTime
 
+let fpsHistory = []
+let fps
+let fpsTime = Date.now()
+
 const calculateMVP = function () {
   const left = -width / height
   const right = width / height
@@ -74,9 +78,28 @@ const setCanvasSize = function (): void {
   gl.viewport(0, 0, width, height)
 }
 
+const calcFps = function() {
+  let now = Date.now()
+  if (now === fpsTime) {
+    return
+  }
+  fpsHistory.push(1000.0 / (now - fpsTime))
+  fpsTime = now
+  if (fpsHistory.length < 10) {
+    return
+  }
+  fps = Math.floor(fpsHistory.reduce((acc, cur) => {
+    return (acc + cur) / 2
+  }) * 100) / 100
+  window.fps.innerHTML = fps
+  fpsHistory.unshift();
+}
+
 export const animate = function () {
   calculateMVP()
   drawImage()
+  calcFps()
+
   requestAnimationFrame(animate)
 }
 

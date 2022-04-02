@@ -56,13 +56,13 @@ vec3 shwankSpace(vec3 p, float amount) {
   // );
 
   // abs space
-  return vec3(
-    p.x / (1.0 + length(p) * amount),
-    p.y / (1.0 + length(p) * amount),
-    p.z / (1.0 + length(p) * amount)
-  );
+  // return vec3(
+  //   p.x / (1.0 + abs(p.z) * amount),
+  //   p.y / (1.0 + abs(p.x) * amount),
+  //   p.z / (1.0 + abs(p.y) * amount)
+  // );
 
-
+  return p;
 
 
 
