@@ -2,7 +2,7 @@ import { init as singleShaderInit, animate as singleShaderAnimate } from 'ts/com
 import { init as dualShaderInit, animate as dualShaderAnimate } from 'ts/components/dual-shader'
 
 import squareVert from 'shaders/nebula.vert'
-import fractalFrag from 'shaders/fractal.frag'
+import raymarchGeo from 'shaders/raymarch-geo.frag'
 
 import nebulaPlaneFrag from 'shaders/nebula2.frag'
 import starbgFrag from 'shaders/space-texture/space-texture.frag'
@@ -15,7 +15,7 @@ import 'css/global.scss'
 let canvasContainer: HTMLDivElement
 
 const raymarchGyroid = function(canvasContainer) {
-  singleShaderInit(canvasContainer, squareVert, fractalFrag)
+  singleShaderInit(canvasContainer, squareVert, raymarchGeo)
   singleShaderAnimate()
 }
 
@@ -41,7 +41,7 @@ const nebulaWithBg = function(canvasContainer) {
 window.onload = () => {
   canvasContainer = document.getElementById('canvas-container')
 
-  nebulaWithBg(canvasContainer)
+  raymarchGyroid(canvasContainer)
 }
 
 
