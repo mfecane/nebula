@@ -29,9 +29,9 @@ $noise
 $simplex-noise
 $space
 
-#define MAX_STEPS 512
+#define MAX_STEPS 128
 #define MAX_DIST 20.0
-#define SURF_DIST 0.001 // hit distance
+#define SURF_DIST 0.5  // hit distance
 
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
 
@@ -39,8 +39,18 @@ float min3(float v1, float v2, float v3, float k) {
   return smin(smin(v1, v2, k), v3, k);
 }
 
+vec3 randomSpaceShift(vec3 p) {
+  p += pbm_simplex_noise3(p, 0.0) * u_control5;
+  return p;
+}
+
 float mapDist(vec3 p) {
-  vec3 p1 = twistSpace(p.xyz, -0.2 + 0.4 * u_control4);
+  //vec3 p1 = shwistSpace(p.xyz, -0.2 + 0.4 * u_control4);
+  vec3 p1 = randomSpaceShift(p);
+  // vec3 p1 = shwankSpace(p, u_control2);
+
+  // don't do this, trust me
+  // vec3 p1 = polarTocartesian(p);
   // vec3 p1 = p;
   // multiply spheres
   // vec3 p1 = (-0.5 + fract(p / 8.0)) * 8.0;
@@ -133,6 +143,7 @@ void main() {
       //float dif = dot(n, normalize(vec3(0.0, 2.0, 0.0))) * 0.5 + 0.5;
       col += vec3(0.1, 0.1, 0.0) * (1.0 - length(col));
   }
+  col *= (1.9 - length(uv) * 0.8);
 
   FragColor = vec4(col, 1.0);
 }

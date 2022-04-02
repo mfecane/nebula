@@ -79,23 +79,23 @@ float simplex_noise3(vec3 v) {
   return 42.0 * dot(m * m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
 }
 
-float pbm_simplex_noise3(vec3 point) {
-  int OCTAVES = 6;
+float pbm_simplex_noise3(vec3 point, float quality) {
+  int OCTAVES = 5;
 
-  if(0.0 < u_quality && u_quality <= 0.25) {
+  if(0.0 < quality && quality <= 0.20) {
+    OCTAVES = 1;
+  }
+
+  if(0.2 < quality && quality <= 0.4) {
     OCTAVES = 2;
   }
 
-  if(0.25 < u_quality && u_quality <= 0.5) {
+  if(0.4 < quality && quality <= 0.6) {
     OCTAVES = 3;
   }
 
-  if(0.5 < u_quality && u_quality <= 0.75) {
+  if(0.6 < quality && quality <= 0.8) {
     OCTAVES = 4;
-  }
-
-  if(0.75 < u_quality && u_quality <= 1.0) {
-    OCTAVES = 5;
   }
 
   float normalize_vector = 0.0;

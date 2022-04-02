@@ -35,3 +35,51 @@ vec3 twistSpace(vec3 point, float amount) {
     point.x * - cos(angle) + point.z * sin(angle)
   );
 }
+
+vec3 polarTocartesian(vec3 point) {
+  vec3 pos = vec3(
+    point.x * sin(point.y * PI + PI / 2.0) * cos(point.z * PI),
+    point.x * cos(point.y * PI + PI / 2.0) * cos(point.z * PI),
+    point.x * sin(point.z * PI)
+  );
+
+  return pos;
+}
+
+vec3 shwankSpace(vec3 p, float amount) {
+
+  // abs space
+  // return vec3(
+  //   abs(p.x) + length(p) * amount,
+  //   abs(p.y) + length(p) * amount,
+  //   abs(p.z) + length(p) * amount
+  // );
+
+  // abs space
+  return vec3(
+    p.x / (1.0 + length(p) * amount),
+    p.y / (1.0 + length(p) * amount),
+    p.z / (1.0 + length(p) * amount)
+  );
+
+
+
+
+
+
+
+
+
+
+
+}
+
+vec3 shwistSpace(vec3 point, float amount) {
+  float angle = sin(point.y / 2.0) * PI * amount;
+
+  return vec3(
+    point.x * sin(angle) + point.z * cos(angle),
+    point.y,
+    point.x * - cos(angle) + point.z * sin(angle)
+  );
+}
