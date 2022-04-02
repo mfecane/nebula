@@ -46,15 +46,15 @@ float mapDist(vec3 p) {
 
   // float d = length(vec2(p1.x, p1.y)) - 0.3;
 
-  // float d = min3(
-  //   length(vec2(p1.x, p1.y) * p1.z * p1.z * 10.0) - 0.05,
-  //   length(vec2(p1.y, p1.z) * p1.x * p1.x * 10.0) - 0.05,
-  //   length(vec2(p1.z, p1.x) * p1.y * p1.y * 10.0) - 0.05,
-  //   -0.05
-  // );
+  float d = min3(
+    length(vec2(p1.x, p1.y) * p1.z * p1.z * 10.0) - 0.05,
+    length(vec2(p1.y, p1.z) * p1.x * p1.x * 10.0) - 0.05,
+    length(vec2(p1.z, p1.x) * p1.y * p1.y * 10.0) - 0.05,
+    -0.05
+  );
 
   // float d = abs(length(p1) - 0.6);
-  float d = sdGyroid(p, 1.0);
+  // float d = sdGyroid(p, 1.0);
 
   return d;
 }

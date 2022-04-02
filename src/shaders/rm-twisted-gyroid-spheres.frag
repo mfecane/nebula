@@ -40,19 +40,25 @@ float min3(float v1, float v2, float v3, float k) {
 }
 
 float mapDist(vec3 p) {
-  vec3 p1 = twistSpace(p.xyz, -0.2 + 0.4 * u_control4);
+  p = twistSpace(p.yzx, -0.2 + 0.4 * u_control4);
   // vec3 p1 = p;
   // multiply spheres
-  // vec3 p1 = (-0.5 + fract(p / 8.0)) * 8.0;
+  vec3 p1 = (-0.5 + fract(p / 8.0)) * 8.0;
   // float d = length(p1) - 0.3;
 
   // float d = length(vec2(p1.x, p1.y)) - 0.3;
 
-  // float s = sdSphere(p1, 4.0);
-  float g1 = sdGyroid2(p1, 0.5 + 1.0 * u_control1, 0.02);
-  float g2 = sdGyroid3(p1, 0.5, 0.02);
-  float d = smin(g1, g2, -0.1) * 0.5;
-  // d = smin(s, d, -0.1);
+  // float d = min3(
+  //   length(vec2(p1.x, p1.y) * p1.z * p1.z * 10.0) - 0.05,
+  //   length(vec2(p1.y, p1.z) * p1.x * p1.x * 10.0) - 0.05,
+  //   length(vec2(p1.z, p1.x) * p1.y * p1.y * 10.0) - 0.05,
+  //   -0.05
+  // );
+
+  // float d = abs(length(p1) - 0.6);
+  float s = sdSphere2(p1, 1.0 + u_control1 * 2.0, 0.05);
+  float g = sdGyroid(p1, 1.0 + 8.0 * u_control3, 0.05);
+  float d = smin(s, g, -0.2);
 
   return d;
 }
@@ -123,15 +129,15 @@ void main() {
   vec4 d = rayMarchCol(rayOrigin, rayDirection);
   vec3 col;
 
-  col += d.rgb * 0.1;
+  col += d.rgb * 0.1 * u_control2;
 
   if(d.w < MAX_DIST) {
       vec3 p = rayOrigin + rayDirection * d.w;
       vec3 n = GetNormal(p);
-      //vec3 r = reflect(rayDirection, n);
+      vec3 r = reflect(rayDirection, n);
 
-      //float dif = dot(n, normalize(vec3(0.0, 2.0, 0.0))) * 0.5 + 0.5;
-      col += vec3(0.1, 0.1, 0.0) * (1.0 - length(col));
+      float dif = dot(n, normalize(vec3(0.0, 2.0, 0.0))) * 0.5 + 0.5;
+      col += mix(vec3(0.1, 0.1, 0.0), vec3(1.0, 0.3, 0.9), dif) * (1.0 - length(col));
   }
 
   FragColor = vec4(col, 1.0);
