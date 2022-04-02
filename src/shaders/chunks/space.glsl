@@ -83,3 +83,10 @@ vec3 shwistSpace(vec3 point, float amount) {
     point.x * - cos(angle) + point.z * sin(angle)
   );
 }
+
+vec3 pixelateSpace(vec3 p, float scale) {
+  float sc = 10.0 * scale;
+  // multiply this by 2.0 to get cool diagonal lines
+  // return (floor((p - 0.5) * sc) + 0.5) / sc * 2.0;
+  return (floor((p - 0.5) * sc) + 0.5) / sc;
+}

@@ -42,17 +42,18 @@ float min3(float v1, float v2, float v3, float k) {
   return smin(smin(v1, v2, k), v3, k);
 }
 
-vec3 randomSpaceShift(vec3 p) {
-  p += simplex_noise3(p) * 0.2;
-  return p;
-}
+  // vec3 randomSpaceShift(vec3 p) {
+  //   p += simplex_noise3(p, 0.01) * 0.2;
+  //   return p;
+  // }
 
 float mapDist(vec3 p) {
   //vec3 p1 = shwistSpace(p.xyz, -0.2 + 0.4 * u_control4);
   // vec3 p1 = randomSpaceShift(p);
-  // vec3 p1 = p + chunkSpiralNoise3(p);
-  vec3 p1 = p;
-  p1 = floor(p1 * 40.0);
+  vec3 p1;
+
+  p1 = pixelateSpace(p, u_control5);
+  p1 = p1 + (-2.5 + 5.0 * chunkSpiralNoise3(p1 * 5.0))* u_control6;
   // vec3 p1 = shwankSpace(p, 0.5 * u_control5);
 
   // don't do this, trust me
@@ -67,7 +68,7 @@ float mapDist(vec3 p) {
   // float s = sdSphere(p1, 4.0);
   float g1 = sdGyroid2(p1, 0.5 + 1.0 * u_control1, 0.01);
   float g2 = sdGyroid3(p1, 0.5, 0.01);
-  float d = smin(g1, g2, -0.1) * 0.5 / 40.0;
+  float d = smin(g1, g2, -0.1) * 0.5;
   // d = smin(s, d, -0.1);
 
   return d;
@@ -104,24 +105,25 @@ float rayMarch(vec3 ro, vec3 rd) {
   return dO;
 }
 
-vec4 rayMarchCol(vec3 ro, vec3 rd) {
+vec2 rayMarchCol(vec3 ro, vec3 rd) {
   float dO = 0.0;
 
-  vec3 col = vec3(0.0);
+  float col = 0.0;
 
   for(int i = 0; i < MAX_STEPS; i++) {
     vec3 p = ro + rd * dO;
     float dS = sceneDistance(p);
-    col += smoothstep(5.0, 0.0, sqrt(dS)) * vec3(0.3, 0.2, 0.1);
+    col += smoothstep(4.0, 0.0, sqrt(dS))* 0.1;
     dO += dS;
     if (dO > MAX_DIST || abs(dS) < SURF_DIST) {
       break;
     }
   }
 
-  return vec4(col, dO);
+  return vec2(col, dO);
 }
 
+// TODO ::: add RaySphere intersect
 void main() {
   const float mouseFactor = 0.0005;
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
@@ -136,20 +138,24 @@ void main() {
   R(rayDirection.xz, rot.y);
   R(rayOrigin.yz, -rot.x);
   R(rayOrigin.xz, rot.y);
-  vec4 d = rayMarchCol(rayOrigin, rayDirection);
-  vec3 col;
 
-  col += d.rgb * 0.1;
+  vec2 d = rayMarchCol(rayOrigin, rayDirection);
 
-  if(d.w < MAX_DIST) {
-      vec3 p = rayOrigin + rayDirection * d.w;
+  float t = clamp(d[0] * 0.1, 0.0, 1.0) ;
+  t *= (1.9 - length(uv) * 0.8) * 1.2;
+  vec3 col = vec3(
+    1.0 - pow(t - 1.0, 2.0),
+    t * t * 0.5,
+    2.0 * pow(t - 0.5, 3.0) + 0.25
+  );
+
+  if(d[1] < MAX_DIST) {
+      vec3 p = rayOrigin + rayDirection * d[1];
       vec3 n = GetNormal(p);
       //vec3 r = reflect(rayDirection, n);
 
       //float dif = dot(n, normalize(vec3(0.0, 2.0, 0.0))) * 0.5 + 0.5;
-      col += vec3(1.0, 1.0, 1.0) * (1.0 - length(col));
+      col += vec3(1.0, 1.0, 1.0) * (1.0 - t);
   }
-  col *= (1.9 - length(uv) * 0.8);
-
-  FragColor = vec4(col, 1.0);
+  FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }
