@@ -20,8 +20,9 @@ uniform float u_control6;
 uniform float u_control7;
 uniform float u_control8;
 
-#define PI  3.14159265358
+#define PI 3.14159265358
 #define TAU 6.28318530718
+#define EXP 2.71828
 
 $lib
 $distances
@@ -53,7 +54,7 @@ float mapDist(vec3 p) {
   vec3 p1;
 
   p1 = pixelateSpace(p, u_control5);
-  p1 = p1 + (-2.5 + 5.0 * chunkSpiralNoise3(p1 * 5.0))* u_control6;
+  p1 = p1 + (-2.5 + chunkSpiralNoise3(p1))* u_control6;
   // vec3 p1 = shwankSpace(p, 0.5 * u_control5);
 
   // don't do this, trust me
@@ -113,7 +114,7 @@ vec2 rayMarchCol(vec3 ro, vec3 rd) {
   for(int i = 0; i < MAX_STEPS; i++) {
     vec3 p = ro + rd * dO;
     float dS = sceneDistance(p);
-    col += smoothstep(4.0, 0.0, sqrt(dS))* 0.1;
+    col += smoothstep(2.0, 0.0, dS) * 0.13;
     dO += dS;
     if (dO > MAX_DIST || abs(dS) < SURF_DIST) {
       break;
@@ -121,6 +122,47 @@ vec2 rayMarchCol(vec3 ro, vec3 rd) {
   }
 
   return vec2(col, dO);
+}
+
+vec3 colorize(float t) {
+
+  // 1.0 - pow(t - 1.0, 2.0)
+  // 4.0 * pow(t - 0.5, 3.0) + 0.5
+  // pow(1.6 * t - 0.8, 3.0) + 0.5
+  // (exp(t) - 1.0) / (EXP - 1.0)
+  // (exp(3.0 * t) - 1.0) / (pow(EXP, 3.0) - 1.0)
+
+  vec3 col = vec3(
+    4.0 * pow(t - 0.5, 3.0) + 0.5,
+    (exp(0.8 * t) - 1.0) / (pow(EXP, 0.8) - 1.0),
+    pow(1.6 * t - 0.8, 3.0) + 0.5
+  );
+
+  col = mix(
+    col,
+    vec3(1.0, 0.4, 0.1),
+    smoothstep(-0.0, 0.1, (0.2 - pow(2.0 - 4.0 * t, 2.0)))
+  );
+
+  // t = clamp(t, 0.0, 1.0);
+
+  // vec3 col = mix(
+  //   vec3(0.1, 0.1, 0.6),
+  //   vec3(1.0, 0.8, 0.5),
+  //   pow(1.6 * t - 0.8, 3.0) + 0.5
+  // ) * mix(
+  //   vec3(0.1, 0.1, 0.0),
+  //   vec3(1.2, 0.8, 0.8),
+  //   (exp(3.0 * t) - 1.0) / (pow(EXP, 3.0) - 1.0)
+  // );
+
+  // col = vec3(
+  //   5.0 * pow(col.r, 1.2),
+  //   5.0 * pow(col.g, 1.6),
+  //   5.0 * pow(col.b, 1.6)
+  // );
+
+  return clamp(col * 1.1 - 0.1, 0.0, 1.0);
 }
 
 // TODO ::: add RaySphere intersect
@@ -142,12 +184,9 @@ void main() {
   vec2 d = rayMarchCol(rayOrigin, rayDirection);
 
   float t = clamp(d[0] * 0.1, 0.0, 1.0) ;
-  t *= (1.9 - length(uv) * 0.8) * 1.2;
-  vec3 col = vec3(
-    1.0 - pow(t - 1.0, 2.0),
-    t * t * 0.5,
-    2.0 * pow(t - 0.5, 3.0) + 0.25
-  );
+  t *= (1.9 - length(uv) * 0.8);
+  // t = clamp(t, 0.0, 1.0);
+  vec3 col = colorize(t);
 
   if(d[1] < MAX_DIST) {
       vec3 p = rayOrigin + rayDirection * d[1];
