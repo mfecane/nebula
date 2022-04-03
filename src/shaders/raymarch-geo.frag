@@ -30,6 +30,7 @@ $noise
 $simplex-noise
 $space
 $spiral-noise
+$rand
 
 #define MAX_STEPS 128
 #define MAX_DIST 20.0
@@ -107,6 +108,9 @@ float rayMarch(vec3 ro, vec3 rd) {
 }
 
 vec2 rayMarchCol(vec3 ro, vec3 rd) {
+  // DITHERING
+	vec2 seed = fract(uv * 2.0) / 2.0 + sin(u_time / 2.0);
+
   float dO = 0.0;
 
   float col = 0.0;
@@ -114,7 +118,9 @@ vec2 rayMarchCol(vec3 ro, vec3 rd) {
   for(int i = 0; i < MAX_STEPS; i++) {
     vec3 p = ro + rd * dO;
     float dS = sceneDistance(p);
-    col += smoothstep(2.0, 0.0, dS) * 0.13;
+    // DITHERING
+    dS = abs(dS) * (0.5 + 0.5 * rand(seed * vec2(i)));
+    col += smoothstep(3.0, 0.0, dS) * 0.09;
     dO += dS;
     if (dO > MAX_DIST || abs(dS) < SURF_DIST) {
       break;
@@ -129,20 +135,17 @@ vec3 colorize(float t) {
   // 1.0 - pow(t - 1.0, 2.0)
   // 4.0 * pow(t - 0.5, 3.0) + 0.5
   // pow(1.6 * t - 0.8, 3.0) + 0.5
+  // 2.0 * pow(t - 0.5, 3.0) + 0.25
   // (exp(t) - 1.0) / (EXP - 1.0)
   // (exp(3.0 * t) - 1.0) / (pow(EXP, 3.0) - 1.0)
 
   vec3 col = vec3(
-    4.0 * pow(t - 0.5, 3.0) + 0.5,
-    (exp(0.8 * t) - 1.0) / (pow(EXP, 0.8) - 1.0),
-    pow(1.6 * t - 0.8, 3.0) + 0.5
+    1.0 - pow(t - 1.0, 2.0),
+    t * t,
+    (exp(3.0 * t) - 1.0) / (pow(EXP, 3.0) - 1.0)
   );
 
-  col = mix(
-    col,
-    vec3(1.0, 0.4, 0.1),
-    smoothstep(-0.0, 0.1, (0.2 - pow(2.0 - 4.0 * t, 2.0)))
-  );
+  col += vec3(1.0, 0.6, 0.2) * smoothstep(0.1, 1.0, (exp(t) - 1.0) / (EXP - 1.0)) ;
 
   // t = clamp(t, 0.0, 1.0);
 
@@ -168,7 +171,11 @@ vec3 colorize(float t) {
 // TODO ::: add RaySphere intersect
 void main() {
   const float mouseFactor = 0.0005;
-  vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
+
+  vec2 uv1 = uv;
+  uv1.x += 0.005 * sin(uv.y * 100.0);
+
+  vec3 rayDirection = normalize(vec3(uv1.x, uv1.y, 1.0));
 	vec3 rayOrigin = vec3(0.0, 0.0, -1.0 - u_scrollValue * 8.0);
 
   vec2 rot = vec2(
@@ -186,7 +193,7 @@ void main() {
   float t = clamp(d[0] * 0.1, 0.0, 1.0) ;
   t *= (1.9 - length(uv) * 0.8);
   // t = clamp(t, 0.0, 1.0);
-  vec3 col = colorize(t);
+  vec3 col = colorize(t) * (1.0 - 0.2 * sin(uv.y * 900.0));
 
   if(d[1] < MAX_DIST) {
       vec3 p = rayOrigin + rayDirection * d[1];
@@ -196,5 +203,6 @@ void main() {
       //float dif = dot(n, normalize(vec3(0.0, 2.0, 0.0))) * 0.5 + 0.5;
       col += vec3(1.0, 1.0, 1.0) * (1.0 - t);
   }
+
   FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }
