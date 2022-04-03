@@ -20,9 +20,13 @@ uniform float u_control6;
 uniform float u_control7;
 uniform float u_control8;
 
+uniform mat4 u_MVP;
+uniform vec2 u_resolution;
+
 #define PI 3.14159265358
 #define TAU 6.28318530718
 #define EXP 2.71828
+#define MIN_STEP 0.3
 
 $lib
 $distances
@@ -36,7 +40,7 @@ $rand
 #define MAX_DIST 20.0
 
 // can make huge hit distance for nice effect
-#define SURF_DIST 0.001  // hit distance
+#define SURF_DIST 0.4  // hit distance
 
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
 
@@ -52,9 +56,9 @@ float min3(float v1, float v2, float v3, float k) {
 float mapDist(vec3 p) {
   //vec3 p1 = shwistSpace(p.xyz, -0.2 + 0.4 * u_control4);
   // vec3 p1 = randomSpaceShift(p);
-  vec3 p1;
+  vec3 p1 = p;
 
-  p1 = pixelateSpace(p, u_control5);
+  // p1 = pixelateSpace(p, 0.2 + 2.0 * u_control5);
   p1 = p1 + (-2.5 + chunkSpiralNoise3(p1))* u_control6;
   // vec3 p1 = shwankSpace(p, 0.5 * u_control5);
 
@@ -68,8 +72,8 @@ float mapDist(vec3 p) {
   // float d = length(vec2(p1.x, p1.y)) - 0.3;
 
   // float s = sdSphere(p1, 4.0);
-  float g1 = sdGyroid2(p1, 0.5 + 1.0 * u_control1, 0.01);
-  float g2 = sdGyroid3(p1, 0.5, 0.01);
+  float g1 = sdGyroid2(p1, 0.5782314, 0.001);
+  float g2 = sdGyroid3(p1, 0.5, 0.001);
   float d = smin(g1, g2, -0.1) * 0.5;
   // d = smin(s, d, -0.1);
 
@@ -107,10 +111,7 @@ float rayMarch(vec3 ro, vec3 rd) {
   return dO;
 }
 
-vec2 rayMarchCol(vec3 ro, vec3 rd) {
-  // DITHERING
-	vec2 seed = fract(uv * 2.0) / 2.0 + sin(u_time / 2.0);
-
+float rayMarchCol(vec3 ro, vec3 rd) {
   float dO = 0.0;
 
   float col = 0.0;
@@ -118,20 +119,22 @@ vec2 rayMarchCol(vec3 ro, vec3 rd) {
   for(int i = 0; i < MAX_STEPS; i++) {
     vec3 p = ro + rd * dO;
     float dS = sceneDistance(p);
-    // DITHERING
-    dS = abs(dS) * (0.5 + 0.5 * rand(seed * vec2(i)));
-    col += smoothstep(3.0, 0.0, dS) * 0.09;
+    dS = min(dS, MIN_STEP);
+    col += max(2.0 - 60.0 * dS * dS * dS, 0.0) * 0.005;
     dO += dS;
-    if (dO > MAX_DIST || abs(dS) < SURF_DIST) {
+    if (dO > MAX_DIST) {
       break;
     }
   }
 
-  return vec2(col, dO);
+  // col *= (1.5 - max(dO, 10.0) / 20.0);
+
+  return col;
 }
 
 vec3 colorize(float t) {
 
+  // stronger
   // 1.0 - pow(t - 1.0, 2.0)
   // 4.0 * pow(t - 0.5, 3.0) + 0.5
   // pow(1.6 * t - 0.8, 3.0) + 0.5
@@ -139,13 +142,20 @@ vec3 colorize(float t) {
   // (exp(t) - 1.0) / (EXP - 1.0)
   // (exp(3.0 * t) - 1.0) / (pow(EXP, 3.0) - 1.0)
 
-  vec3 col = vec3(
-    1.0 - pow(t - 1.0, 2.0),
-    t * t,
-    (exp(3.0 * t) - 1.0) / (pow(EXP, 3.0) - 1.0)
-  );
+  // vec3 col = vec3(
+  //   (exp(t) - 1.0) / (EXP - 1.0),
+  //   2.0 * pow(t - 0.5, 3.0) + 0.25,
+  //   1.0 - pow(t - 1.0, 2.0)
+  // ) * vec3(
+  //   0.4,
+  //   0.3,
+  //   0.2
+  // );
 
-  col += vec3(1.0, 0.6, 0.2) * smoothstep(0.1, 1.0, (exp(t) - 1.0) / (EXP - 1.0)) ;
+  // col += vec3(0.2, 1.0, 0.2) * smoothstep(0.95, 1.0, t * t);
+  // col += vec3(0.4, 0.5, 1.0) * smoothstep(0.96, 1.0, t);
+
+  vec3 col = vec3(t);
 
   // t = clamp(t, 0.0, 1.0);
 
@@ -165,17 +175,15 @@ vec3 colorize(float t) {
   //   5.0 * pow(col.b, 1.6)
   // );
 
-  return clamp(col * 1.1 - 0.1, 0.0, 1.0);
+  return clamp(col, 0.0, 1.0);
 }
 
 // TODO ::: add RaySphere intersect
 void main() {
   const float mouseFactor = 0.0005;
+  float resolution = u_resolution.y * u_MVP[0][0];
 
-  vec2 uv1 = uv;
-  uv1.x += 0.005 * sin(uv.y * 100.0);
-
-  vec3 rayDirection = normalize(vec3(uv1.x, uv1.y, 1.0));
+  vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
 	vec3 rayOrigin = vec3(0.0, 0.0, -1.0 - u_scrollValue * 8.0);
 
   vec2 rot = vec2(
@@ -188,21 +196,11 @@ void main() {
   R(rayOrigin.yz, -rot.x);
   R(rayOrigin.xz, rot.y);
 
-  vec2 d = rayMarchCol(rayOrigin, rayDirection);
+  float t = rayMarchCol(rayOrigin, rayDirection);
+  // t *= smoothstep(2.5, 1.0, length(uv));
+  t = clamp(t, 0.0, 1.0) ;
 
-  float t = clamp(d[0] * 0.1, 0.0, 1.0) ;
-  t *= (1.9 - length(uv) * 0.8);
-  // t = clamp(t, 0.0, 1.0);
-  vec3 col = colorize(t) * (1.0 - 0.2 * sin(uv.y * 900.0));
-
-  if(d[1] < MAX_DIST) {
-      vec3 p = rayOrigin + rayDirection * d[1];
-      vec3 n = GetNormal(p);
-      //vec3 r = reflect(rayDirection, n);
-
-      //float dif = dot(n, normalize(vec3(0.0, 2.0, 0.0))) * 0.5 + 0.5;
-      col += vec3(1.0, 1.0, 1.0) * (1.0 - t);
-  }
+  vec3 col = colorize(t) * (1.0 - 0.2 * sin(uv.y * resolution * PI / 2.0));
 
   FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }

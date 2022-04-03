@@ -53,6 +53,7 @@ const drawImage = function (): void {
   nebulaShader.setUniform('u_mouseY', mouseY)
   nebulaShader.setUniform('u_scrollValue', scrollValue)
   nebulaShader.setUniform('u_quality', 1.0)
+  nebulaShader.setUniform('u_resolution', width, height);
   nebulaShader.setUniform('u_control1', getControlValue(1) / 100)
   nebulaShader.setUniform('u_control2', getControlValue(2) / 100)
   nebulaShader.setUniform('u_control3', getControlValue(3) / 100)
@@ -159,6 +160,7 @@ export const init = function (root, vertShaderSrc, fragShaderSrc) {
   nebulaShader.addUniform('u_mouseY', '1f')
   nebulaShader.addUniform('u_scrollValue', '1f')
   nebulaShader.addUniform('u_quality', '1f')
+  nebulaShader.addUniform('u_resolution', '2f')
   nebulaShader.addUniform('u_control1', '1f')
   nebulaShader.addUniform('u_control2', '1f')
   nebulaShader.addUniform('u_control3', '1f')
