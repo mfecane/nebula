@@ -85,7 +85,7 @@ void main() {
       vec3 n = GetNormal(p);
       vec3 r = reflect(rayDirection, n);
 
-      float dif = dot(n, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
+      float dif = dot(n, normalize(vec3(0.0, 1.0, 0.0))) * 0.5 + 0.5;
       col = vec3(dif);
   }
 
