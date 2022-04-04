@@ -37,7 +37,7 @@ $spiral-noise
 $rand
 
 #define MAX_STEPS 128
-#define MAX_DIST 20.0
+#define MAX_DIST 10.0
 
 // can make huge hit distance for nice effect
 #define SURF_DIST 0.001  // hit distance
@@ -49,8 +49,13 @@ float smin3(float v1, float v2, float v3, float k) {
 }
 
 float sceneDistance(vec3 p) {
-  vec3 p1 = (fract(p) - 0.5);
-  return length(p1) - 0.2;
+  vec3 p2 = (p + 0.5) * 4.0;
+  float n = Noise31(floor(p2));
+  vec3 p1 = fract(p2) - 0.5;
+  float shift = 0.1  + 0.3 * u_control1;
+  vec3 sh = vec3(shift)  * (1.0 - n * 2.0);
+  // p1 = (fract(p1) - 0.5);
+  return (length(p1 + sh) - 0.1) / 4.0;
 }
 
 vec3 GetNormal(vec3 p) {
@@ -155,7 +160,7 @@ void main() {
       vec3 n = GetNormal(p);
       vec3 r = reflect(rayDirection, n);
 
-      float dif = dot(n, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
+      float dif = dot(n, normalize(vec3(0.0, 1.0, 0.0))) * 0.5 + 0.5;
       col = vec3(dif);
   }
 
