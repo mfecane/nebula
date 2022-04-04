@@ -49,13 +49,13 @@ float smin3(float v1, float v2, float v3, float k) {
 }
 
 float sceneDistance(vec3 p) {
+  p = pixelateSpace(p, u_control1);
   vec3 p1 = fract(p * 2.0) - 0.5;
 
   return abs(length(p1) - 0.2) * 0.1;
 }
 
 vec3 GetNormal(vec3 p) {
-  p = pixelateSpace(p, u_control1);
   float d = sceneDistance(p);
   vec2 e = vec2(0.001, 0.0);
   vec3 n = d - vec3(
