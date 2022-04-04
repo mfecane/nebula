@@ -49,9 +49,8 @@ float smin3(float v1, float v2, float v3, float k) {
 }
 
 float sceneDistance(vec3 p) {
-  vec3 p1 = fract(p * 2.0) - 0.5;
-
-  return abs(length(p1) - 0.2) * 0.1;
+  vec3 p1 = (fract(p) - 0.5);
+  return length(p1) - 0.2;
 }
 
 vec3 GetNormal(vec3 p) {
@@ -66,7 +65,7 @@ vec3 GetNormal(vec3 p) {
   return normalize(n);
 }
 
-float rayMarchCol(vec3 ro, vec3 rd) {
+float rayMarch(vec3 ro, vec3 rd) {
   float dO = 0.0;
 
   float col = 0.0;
@@ -147,7 +146,7 @@ void main() {
   R(rayOrigin.yz, -rot.x);
   R(rayOrigin.xz, rot.y);
 
-  float d = rayMarchCol(rayOrigin, rayDirection);
+  float d = rayMarch(rayOrigin, rayDirection);
 
   vec3 col = vec3(0.0);
 
