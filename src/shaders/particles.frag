@@ -26,7 +26,6 @@ uniform vec2 u_resolution;
 #define PI 3.14159265358
 #define TAU 6.28318530718
 #define EXP 2.71828
-#define MIN_STEP 0.3
 
 $lib
 $distances
@@ -38,9 +37,10 @@ $rand
 
 #define MAX_STEPS 128
 #define MAX_DIST 10.0
+#define MIN_STEP 0.05
 
 // can make huge hit distance for nice effect
-#define SURF_DIST 0.001  // hit distance
+#define SURF_DIST 0.0005  // hit distance
 
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
 
@@ -55,7 +55,7 @@ float sceneDistance(vec3 p) {
   float shift = 0.1  + 0.3 * u_control1;
   vec3 sh = vec3(shift)  * (1.0 - n * 2.0);
   // p1 = (fract(p1) - 0.5);
-  return (length(p1 + sh) - 0.1) / 4.0;
+  return (length(p1 + sh) - 0.05) / 4.0;
 }
 
 vec3 GetNormal(vec3 p) {
@@ -78,6 +78,7 @@ float rayMarch(vec3 ro, vec3 rd) {
   for(int i = 0; i < MAX_STEPS; i++) {
     vec3 p = ro + rd * dO;
     float dS = sceneDistance(p);
+    dS = min(dS, MIN_STEP);
     dO += dS;
     if (dO > MAX_DIST && abs(dS) < SURF_DIST) {
       break;
