@@ -1,3 +1,7 @@
+
+import React from 'react'
+import ReactDOM from 'react-dom'
+
 import { init as singleShaderInit, animate as singleShaderAnimate } from 'ts/components/single-shader'
 import { init as dualShaderInit, animate as dualShaderAnimate } from 'ts/components/dual-shader'
 
@@ -7,6 +11,7 @@ import raymarchGeo from 'shaders/raymarch-geo.frag'
 import nebulaPlaneFrag from 'shaders/nebula2.frag'
 import starbgFrag from 'shaders/space-texture/space-texture.frag'
 import background2 from 'shaders/background2.frag'
+import App from 'ts/components/app'
 
 import 'css/config.scss'
 import 'css/null.scss'
@@ -43,5 +48,8 @@ window.onload = () => {
 
   raymarchGyroid(canvasContainer)
 }
+
+ReactDOM.render(<App />, document.querySelector('#app'))
+
 
 
