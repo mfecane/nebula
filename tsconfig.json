@@ -1,10 +1,18 @@
 {
   "compilerOptions": {
     "baseUrl": "./",
-    "target": "es5",
     "paths": {
       "ts/*": ["./src/ts/*"],
-      "shaders/*": ["./src/shaders/*"]
-    }
+      "components/*": ["./src/ts/components/*"]
+    },
+    "outDir": "./dist",
+    "target": "es5",
+    "module": "es6",
+    "jsx": "react",
+    "noImplicitAny": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "lib": ["dom", "esnext"],
+    "esModuleInterop": true
   }
 }

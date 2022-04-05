@@ -1,9 +1,14 @@
-
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 
-import { init as singleShaderInit, animate as singleShaderAnimate } from 'ts/components/single-shader'
-import { init as dualShaderInit, animate as dualShaderAnimate } from 'ts/components/dual-shader'
+import {
+  init as singleShaderInit,
+  animate as singleShaderAnimate,
+} from 'ts/components/single-shader'
+import {
+  init as dualShaderInit,
+  animate as dualShaderAnimate,
+} from 'ts/components/dual-shader'
 
 import squareVert from 'shaders/nebula.vert'
 import raymarchGeo from 'shaders/raymarch-geo.frag'
@@ -19,24 +24,24 @@ import 'css/global.scss'
 
 let canvasContainer: HTMLDivElement
 
-const raymarchGyroid = function(canvasContainer) {
+const raymarchGyroid = function (canvasContainer) {
   singleShaderInit(canvasContainer, squareVert, raymarchGeo)
   singleShaderAnimate()
 }
 
-const raymarchNebula = function(canvasContainer) {
+const raymarchNebula = function (canvasContainer) {
   // should actually add background
   singleShaderInit(canvasContainer, squareVert, nebulaPlaneFrag)
   singleShaderAnimate()
 }
 
-const nebulaWithBg = function(canvasContainer) {
+const nebulaWithBg = function (canvasContainer) {
   // should actually add background
   const options = {
     mainVert: squareVert,
     mainFrag: nebulaPlaneFrag,
     bgVert: squareVert,
-    bgFrag: background2
+    bgFrag: background2,
   }
 
   dualShaderInit(canvasContainer, options)
@@ -49,7 +54,5 @@ window.onload = () => {
   raymarchGyroid(canvasContainer)
 }
 
-ReactDOM.render(<App />, document.querySelector('#app'))
-
-
-
+const root = createRoot(document.querySelector('#app'))
+root.render(<App />)

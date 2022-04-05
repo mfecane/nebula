@@ -1,0 +1,44 @@
+@import "css/config.scss";
+
+.collapseButton {
+  margin: 20px;
+  background: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.arrowIcon {
+  display: inline-block;
+  background: rgb(255, 255, 255);
+  width: 32px;
+  height: 32px;
+  mask: url(assets/arrow.svg);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  transition: transform 200ms ease-out;
+}
+
+.collapseButton:hover {
+  color: $accent;
+}
+
+.collapseButton:hover .arrowIcon {
+  background: $accent;
+}
+
+.collapseButton.flip .arrowIcon {
+  transform: rotate(180deg);
+}
+
+.collapseButton label {
+  opacity: 1.0;
+  transition: opacity 200ms ease-out;
+}
+
+.collapseButton.flip label {
+  opacity: 0.0;
+}

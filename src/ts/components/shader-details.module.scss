@@ -1,0 +1,49 @@
+@import "css/config.scss";
+
+.container {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 800px;
+  border-radius: 2px;
+  padding: 26px 40px;
+  background-color: rgba(43, 43, 43, 0.6);
+  transform: translateX(-50%);
+  transition: all 200ms ease-out;
+}
+
+.container.shift {
+  transform: translateX(calc(-50% + 200px));
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 600;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 20px;
+  margin-bottom: 26px;
+  position: relative;
+}
+
+.controls {
+  display: grid;
+}
+
+.controlContainer {
+  min-height: 200px;
+  opacity: 1;
+}
+
+.controlContainer.collapsed {
+  min-height: 0px;
+  opacity: 0;
+}
+
+.buttonContainer {
+  transform: translateY(6px);
+}

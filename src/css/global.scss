@@ -1,6 +1,7 @@
 @import "css/config.scss";
 
-body {
+body, button {
+  font-family: Montserrat, sans-serif;
   color: $light;
 }
 
@@ -28,4 +29,17 @@ body {
 
 #fps {
   grid-column: 1 / span 2;
+}
+
+::-webkit-scrollbar {
+  width: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background-color: rgba(0, 0, 0, 0.5);
 }

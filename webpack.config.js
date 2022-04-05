@@ -4,19 +4,21 @@ var path = require("path");
 
 var rules = [
   require("./webpack/loaders/glsl"),
-  // require("./webpack/loaders/url"),
   require("./webpack/loaders/css"),
   require("./webpack/loaders/image"),
   require("./webpack/loaders/svg"),
   require("./webpack/loaders/file"),
   require("./webpack/loaders/html"),
-  require("./webpack/loaders/babel"),
-  // require("./webpack/loaders/html"),
+  {
+    test: /\.(js|ts|tsx)$/,
+    exclude: /node_modules/,
+    use: ["babel-loader"],
+  }
 ];
 
 module.exports = {
   mode: "development",
-  entry: path.resolve(__dirname, "src/ts/index.ts"),
+  entry: path.resolve(__dirname, "src/ts/index.tsx"),
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",

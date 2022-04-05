@@ -1,9 +1,6 @@
 import Shader from 'ts/webgl/shader'
 
-import {
-  init as initControls,
-  getValue as getControlValue,
-} from 'ts/components/controls'
+import { init as initControls, getValue as getControlValue } from 'ts/components/controls'
 
 import {
   init as orbitControlInit,
@@ -81,7 +78,7 @@ const setCanvasSize = function (): void {
   gl.viewport(0, 0, width, height)
 }
 
-const calcFps = function () {
+const calcFps = function() {
   let now = Date.now()
   if (now === fpsTime) {
     return
@@ -91,18 +88,11 @@ const calcFps = function () {
   if (fpsHistory.length < 10) {
     return
   }
-  fps =
-    Math.floor(
-      fpsHistory.reduce((acc, cur) => {
-        return (acc + cur) / 2
-      }) * 10
-    ) / 10
-  // window.fps.innerHTML = fps
-  fpsHistory.unshift()
-}
-
-export const getFps = function () {
-  return fps
+  fps = Math.floor(fpsHistory.reduce((acc, cur) => {
+    return (acc + cur) / 2
+  }) * 100) / 100
+  window.fps.innerHTML = fps
+  fpsHistory.unshift();
 }
 
 export const animate = function () {
@@ -129,7 +119,10 @@ export const init = function (root, vertShaderSrc, fragShaderSrc) {
   initControls()
 
   nebulaShader = new Shader(gl)
-  nebulaShader.createProgram(vertShaderSrc, fragShaderSrc)
+  nebulaShader.createProgram(
+    vertShaderSrc,
+    fragShaderSrc
+  )
 
   const vertexBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)

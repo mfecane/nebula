@@ -1,0 +1,22 @@
+.container {
+  padding: 20px 32px;
+  background-color: transparent;
+  transition: all 200ms ease-in-out;
+  cursor: pointer;
+}
+
+.container:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.title {
+  color: #9edcff;
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.description {
+  color: #fff;
+  font-size: 14px;
+}

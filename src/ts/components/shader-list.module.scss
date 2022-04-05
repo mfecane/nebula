@@ -1,0 +1,21 @@
+.container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  transition: all 300ms ease-in;
+}
+
+.container.hidden {
+  left: -420px;
+}
+
+.list {
+  width: 420px;
+  height: 100vh;
+  background-color: rgba(43, 43, 43, 0.6);
+  overflow-x: hidden;
+  overflow-y: auto;
+}

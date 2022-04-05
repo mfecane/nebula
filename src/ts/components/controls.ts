@@ -19,6 +19,7 @@ export const getValue = function (index: number): number {
 }
 
 export const init = function (): void {
+  return
   control1 = document.getElementById('sliderValue1')
   control2 = document.getElementById('sliderValue2')
   control3 = document.getElementById('sliderValue3')
@@ -29,6 +30,7 @@ export const init = function (): void {
   control8 = document.getElementById('sliderValue8')
 
   controls = document.querySelector('.controls')
+
   controls.addEventListener('mousedown', (e) => {
     e.stopPropagation()
   })
