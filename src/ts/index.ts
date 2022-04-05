@@ -3,7 +3,7 @@ import { init as dualShaderInit, animate as dualShaderAnimate } from 'ts/compone
 
 import squareVert from 'shaders/nebula.vert'
 import raymarchGeo from 'shaders/raymarch-geo.frag'
-import particlesFrag from 'shaders/particles.frag'
+import voronoiFrag from 'shaders/voronoi.frag'
 
 import nebulaPlaneFrag from 'shaders/nebula2.frag'
 import starbgFrag from 'shaders/space-texture/space-texture.frag'
@@ -15,8 +15,8 @@ import 'css/global.scss'
 
 let canvasContainer: HTMLDivElement
 
-const raymarchParticles = function(canvasContainer) {
-  singleShaderInit(canvasContainer, squareVert, particlesFrag)
+const raymarchVoronoi = function(canvasContainer) {
+  singleShaderInit(canvasContainer, squareVert, voronoiFrag)
   singleShaderAnimate()
 }
 
@@ -47,7 +47,7 @@ const nebulaWithBg = function(canvasContainer) {
 window.onload = () => {
   canvasContainer = document.getElementById('canvas-container')
 
-  raymarchParticles(canvasContainer)
+  raymarchVoronoi(canvasContainer)
 }
 
 
