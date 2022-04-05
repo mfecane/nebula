@@ -1,6 +1,10 @@
 import Shader from 'ts/webgl/shader'
+import { getParameters } from 'ts/parameters'
 
-import { init as initControls, getValue as getControlValue } from 'ts/components/controls'
+import {
+  init as initControls,
+  getValue as getControlValue,
+} from 'ts/components/controls'
 
 import {
   init as orbitControlInit,
@@ -8,167 +12,189 @@ import {
   getMouseControl,
 } from 'ts/components/orbit-control'
 
-let canvas: HTMLCanvasElement
-let rootElement: HTMLDivElement
-let gl: WebGL2RenderingContext = null
-let width = 0
-let height = 0
-let nebulaShader: Shader
-let proj
-let startTime = Date.now()
-let time = startTime
-
-let fpsHistory = []
-let fps
-let fpsTime = Date.now()
-
-const calculateMVP = function () {
-  const left = -width / height
-  const right = width / height
-
-  const bottom = -1.0
-  const top = 1.0
-
-  const near = -1.0
-  const far = 1.0
-
-  // prettier-ignore
-  proj = [
-    2 / (right - left),                   0,                 0,  -(right + left) / (right - left),
-                     0,  2 / (top - bottom),                 0,  -(top + bottom) / (top - bottom),
-                     0,                   0,  2 / (far - near),      -(far + near) / (far - near),
-                     0,                   0,                 0,                                 1,
-  ];
+interface rendrerOptions {
+  id: string
+  vertShaderSrc: string
+  fragShaderSrc: string
+  parameters: []
 }
 
-const drawImage = function (): void {
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-  nebulaShader.useProgram()
-  nebulaShader.setUniform('u_MVP', proj)
-  const [mouseX, mouseY, scrollValue] = getMouseControl()
-  time = (Date.now() - startTime) / 1000
-  // console.log('time', time)
-  nebulaShader.setUniform('u_time', time)
-  nebulaShader.setUniform('u_mouseX', mouseX)
-  nebulaShader.setUniform('u_mouseY', mouseY)
-  nebulaShader.setUniform('u_scrollValue', scrollValue)
-  nebulaShader.setUniform('u_quality', 1.0)
-  nebulaShader.setUniform('u_control1', getControlValue(1) / 100)
-  nebulaShader.setUniform('u_control2', getControlValue(2) / 100)
-  nebulaShader.setUniform('u_control3', getControlValue(3) / 100)
-  nebulaShader.setUniform('u_control4', getControlValue(4) / 100)
-  nebulaShader.setUniform('u_control5', getControlValue(5) / 100)
-  nebulaShader.setUniform('u_control6', getControlValue(6) / 100)
-  nebulaShader.setUniform('u_control7', getControlValue(7) / 100)
-  nebulaShader.setUniform('u_control8', getControlValue(8) / 100)
+export class Renderer {
+  width = 0
+  height = 0
+  vertexSource = ''
+  fragmentSource = ''
+  root: HTMLDivElement = null
+  gl: WebGL2RenderingContext = null
+  canvas: HTMLCanvasElement = null
+  proj: number[] = null
+  options: rendrerOptions = null
+  animId: number = null
 
-  gl.clearColor(0.0, 0.0, 0.0, 1.0)
-  gl.clear(gl.COLOR_BUFFER_BIT)
-  gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0)
-}
+  startTime = Date.now()
+  time = this.startTime
 
-const setCanvasSize = function (): void {
-  width = rootElement.clientWidth
-  height = rootElement.clientHeight
+  fpsHistory: number[] = []
+  fps = 0.0
+  fpsTime = Date.now()
 
-  canvas.width = width
-  canvas.height = height
-  canvas.style.width = `${width}px`
-  canvas.style.height = `${height}px`
-  gl.viewport(0, 0, width, height)
-}
+  mainShader: Shader
 
-const calcFps = function() {
-  let now = Date.now()
-  if (now === fpsTime) {
-    return
+  parameters = {}
+
+  constructor(root: HTMLDivElement, options: rendrerOptions) {
+    this.options = options
+    this.vertexSource = options.vertexSource
+    this.fragmentSource = options.fragmentSource
+
+    this.root = root
+    this.canvas = document.createElement(`canvas`)
+
+    this.root.appendChild(this.canvas)
+    this.canvas.id = 'canvas'
+
+    this.gl = this.canvas.getContext('webgl2')
+
+    this.setCanvasSize()
+
+    window.addEventListener('resize', this.setCanvasSize.bind(this))
+
+    orbitControlInit()
+    orbitControlAnimate()
+    initControls()
+
+    this.mainShader = new Shader(this.gl)
+    this.mainShader.createProgram(this.vertexSource, this.fragmentSource)
+
+    const vertexBuffer = this.gl.createBuffer()
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexBuffer)
+
+    // prettier-ignore
+    const positions = [
+        -1.0,  -1.0,
+        1.0,  -1.0,
+        1.0,  1.0,
+        -1.0,  1.0
+      ];
+    this.gl.bufferData(
+      this.gl.ARRAY_BUFFER,
+      new Float32Array(positions),
+      this.gl.STATIC_DRAW
+    )
+
+    const indexBuffer = this.gl.createBuffer()
+    this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+
+    // prettier-ignore
+    const indices = [
+        0, 1, 2,
+        2, 3, 0
+      ];
+
+    this.gl.bufferData(
+      this.gl.ELEMENT_ARRAY_BUFFER,
+      new Uint16Array(indices),
+      this.gl.STATIC_DRAW
+    )
+
+    this.mainShader.useProgram()
+    this.mainShader.setPositions('aPos')
+
+    this.mainShader.addUniform('u_MVP', '4fv')
+    this.mainShader.addUniform('u_time', '1f')
+    this.mainShader.addUniform('u_mouseX', '1f')
+    this.mainShader.addUniform('u_mouseY', '1f')
+    this.mainShader.addUniform('u_scrollValue', '1f')
+    this.mainShader.addUniform('u_quality', '1f')
+
+    options.parameters.forEach((item: { id: string; default: number }) => {
+      this.mainShader.addUniform(`u_${item.id}`, '1f')
+      this.parameters[item.id] = item.default
+    })
   }
-  fpsHistory.push(1000.0 / (now - fpsTime))
-  fpsTime = now
-  if (fpsHistory.length < 10) {
-    return
+
+  destroy(): void {
+    this.root.removeChild(this.canvas)
+    window.removeEventListener('resize', this.setCanvasSize.bind(this))
+    cancelAnimationFrame(this.animId)
   }
-  fps = Math.floor(fpsHistory.reduce((acc, cur) => {
-    return (acc + cur) / 2
-  }) * 100) / 100
-  window.fps.innerHTML = fps
-  fpsHistory.unshift();
-}
 
-export const animate = function () {
-  calculateMVP()
-  drawImage()
-  calcFps()
+  renderFrame(): void {
+    this.proj = this.calculateMVP()
 
-  requestAnimationFrame(animate)
-}
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
+    this.mainShader.useProgram()
+    this.mainShader.setUniform('u_MVP', this.proj)
+    const [mouseX, mouseY, scrollValue] = getMouseControl()
+    this.time = (Date.now() - this.startTime) / 1000
+    this.mainShader.setUniform('u_time', this.time)
+    this.mainShader.setUniform('u_mouseX', mouseX)
+    this.mainShader.setUniform('u_mouseY', mouseY)
+    this.mainShader.setUniform('u_scrollValue', scrollValue)
+    this.mainShader.setUniform('u_quality', 1.0)
 
-export const init = function (root, vertShaderSrc, fragShaderSrc) {
-  rootElement = root
-  canvas = document.createElement(`canvas`)
-  root.appendChild(canvas)
-  canvas.id = 'canvas'
+    this.options.parameters.forEach(({ id }: { id: string }) => {
+      const value = this.parameters[id]
+      this.mainShader.setUniform(`u_${id}`, value)
+    })
 
-  gl = canvas.getContext('webgl2')
+    this.gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT)
+    this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0)
+  }
 
-  setCanvasSize()
+  animate(): void {
+    this.renderFrame()
+    this.updateFps()
+    this.animId = requestAnimationFrame(this.animate.bind(this))
+  }
 
-  window.addEventListener('resize', setCanvasSize)
-  orbitControlInit()
-  orbitControlAnimate()
-  initControls()
+  setCanvasSize(): void {
+    this.width = this.root.clientWidth
+    this.height = this.root.clientHeight
 
-  nebulaShader = new Shader(gl)
-  nebulaShader.createProgram(
-    vertShaderSrc,
-    fragShaderSrc
-  )
+    this.canvas.width = this.width
+    this.canvas.height = this.height
+    this.canvas.style.width = `${this.width}px`
+    this.canvas.style.height = `${this.height}px`
+    this.gl.viewport(0, 0, this.width, this.height)
+  }
 
-  const vertexBuffer = gl.createBuffer()
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+  calculateMVP(): number[] {
+    const left = -this.width / this.height
+    const right = this.width / this.height
 
-  // prettier-ignore
-  const positions = [
-      -1.0,  -1.0,
-      1.0,  -1.0,
-      1.0,  1.0,
-      -1.0,  1.0
+    const bottom = -1.0
+    const top = 1.0
+
+    const near = -1.0
+    const far = 1.0
+
+    // prettier-ignore
+    return [
+      2 / (right - left),                   0,                 0,  -(right + left) / (right - left),
+                       0,  2 / (top - bottom),                 0,  -(top + bottom) / (top - bottom),
+                       0,                   0,  2 / (far - near),    -(far + near) /   (far - near),
+                       0,                   0,                 0,                                 1,
     ];
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
+  }
 
-  const indexBuffer = gl.createBuffer()
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
-
-  // prettier-ignore
-  const indices = [
-      0, 1, 2,
-      2, 3, 0
-    ];
-
-  gl.bufferData(
-    gl.ELEMENT_ARRAY_BUFFER,
-    new Uint16Array(indices),
-    gl.STATIC_DRAW
-  )
-
-  nebulaShader.useProgram()
-  nebulaShader.setPositions('aPos')
-  nebulaShader.addUniform('u_MVP', '4fv')
-  nebulaShader.addUniform('u_time', '1f')
-  nebulaShader.addUniform('u_mouseX', '1f')
-  nebulaShader.addUniform('u_mouseY', '1f')
-  nebulaShader.addUniform('u_scrollValue', '1f')
-  nebulaShader.addUniform('u_quality', '1f')
-  nebulaShader.addUniform('u_control1', '1f')
-  nebulaShader.addUniform('u_control2', '1f')
-  nebulaShader.addUniform('u_control3', '1f')
-  nebulaShader.addUniform('u_control4', '1f')
-  nebulaShader.addUniform('u_control5', '1f')
-  nebulaShader.addUniform('u_control6', '1f')
-  nebulaShader.addUniform('u_control7', '1f')
-  nebulaShader.addUniform('u_control8', '1f')
-
-  // Create and bind the framebuffer
-  // frameBuffer = gl.createFramebuffer()
-  // gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer)
+  updateFps(): void {
+    const now = Date.now()
+    if (now === this.fpsTime) {
+      return
+    }
+    this.fpsHistory.push(1000.0 / (now - this.fpsTime))
+    this.fpsTime = now
+    if (this.fpsHistory.length < 10) {
+      return
+    }
+    this.fps =
+      Math.floor(
+        this.fpsHistory.reduce((acc, cur) => {
+          return (acc + cur) / 2
+        }) * 100
+      ) / 100
+    this.fpsHistory.unshift()
+  }
 }

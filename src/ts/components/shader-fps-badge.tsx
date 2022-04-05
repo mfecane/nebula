@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getFps } from 'ts/components/single-shader'
+import { getFps } from 'ts/renderer-manager'
 
 import styles from 'ts/components/shader-fps-badge.module.scss'
 
@@ -20,7 +20,7 @@ const ShaderFpsBadge = () => {
   return (
     <div className={styles.container}>
       <div className={styles.label}>FPS</div>
-      <div className={styles.value}>{value}</div>
+      <div className={styles.value}>{value.toString()}</div>
     </div>
   )
 }

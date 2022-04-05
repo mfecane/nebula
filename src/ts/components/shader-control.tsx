@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react'
+import { setParameter } from 'ts/renderer-manager'
 
 import styles from 'ts/components/shader-control.module.scss'
 
@@ -10,14 +11,18 @@ const ShaderControl = ({ item }) => {
 
   const onChange = (e) => {
     e.preventDefault()
-    setValue(e.target.value)
+    const value = e.target.value || 0
+    setValue(value)
+    setParameter(item.id, value)
   }
 
   useEffect(() => {
+    setValue(item.default)
+
     ref.current.addEventListener('mousedown', (e) => {
       e.stopPropagation()
     })
-  })
+  }, [])
 
   return (
     <div className={styles.container}>
@@ -30,7 +35,8 @@ const ShaderControl = ({ item }) => {
           ref={ref}
           type="range"
           min="0"
-          max="100"
+          max="1"
+          step="0.01"
           value={value}
           className={styles.slider}
           onChange={onChange}
