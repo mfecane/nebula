@@ -31,3 +31,18 @@ addShader({
   fragmentSource: raymarchGeo01,
   parameters: [{ id: 'pixelate', label: 'Pixelate', default: 0.5 }],
 })
+
+import twistGyRSh from 'shaders/rm-twisted-gyroid-spheres.frag'
+
+addShader({
+  name: 'Twisted gyroid spheres',
+  description: 'Ray marched gyroid spheres with twist',
+  vertexSource: squareVert,
+  fragmentSource: twistGyRSh,
+  parameters: [
+    { id: 'control1', label: 'Radius', default: 0.5 },
+    { id: 'control2', label: 'Glow', default: 0.5 },
+    { id: 'control3', label: 'Gyroid density', default: 0.5 },
+    { id: 'control4', label: 'Twist space', default: 0.5 },
+  ],
+})
