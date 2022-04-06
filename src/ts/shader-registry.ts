@@ -16,15 +16,16 @@ addShader({
   vertexSource: squareVert,
   fragmentSource: raymarchGeo,
   parameters: [
-    { id: 'pop', label: 'Poppins', default: 0.5 },
-    { id: 'mon', label: 'Montserrat', default: 0.5 },
+    { id: 'spiraNoise', label: 'Spiral noise', default: 0.5 },
+    { id: 'gyroidOffset', label: 'Gyroid offset', default: 0.5 },
+    { id: 'pixelate', label: 'Pixelate', default: 0.5 },
   ],
 })
 
 import raymarchGeo01 from 'shaders/raymarch-geo-01.frag'
 
 addShader({
-  name: 'Shity shader',
+  name: 'Strings with color splash',
   description: 'Lorem, ipsum dolor sit amet consectetur adipisicing elit.',
   vertexSource: squareVert,
   fragmentSource: raymarchGeo01,

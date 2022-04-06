@@ -11,14 +11,10 @@ uniform float u_mouseY;
 uniform float u_scrollValue;
 
 uniform float u_quality;
-uniform float u_control1;
-uniform float u_control2;
-uniform float u_control3;
-uniform float u_control4;
-uniform float u_control5;
-uniform float u_control6;
-uniform float u_control7;
-uniform float u_control8;
+
+uniform float u_spiraNoise;
+uniform float u_gyroidOffset;
+uniform float u_pixelate;
 
 #define PI 3.14159265358
 #define TAU 6.28318530718
@@ -54,8 +50,8 @@ float mapDist(vec3 p) {
   // vec3 p1 = randomSpaceShift(p);
   vec3 p1;
 
-  p1 = pixelateSpace(p, u_control5);
-  p1 = p1 + (-2.5 + chunkSpiralNoise3(p1))* u_control6;
+  p1 = pixelateSpace(p, u_pixelate);
+  p1 = p1 + (-2.5 + chunkSpiralNoise3(p1))* u_spiraNoise;
   // vec3 p1 = shwankSpace(p, 0.5 * u_control5);
 
   // don't do this, trust me
@@ -68,7 +64,7 @@ float mapDist(vec3 p) {
   // float d = length(vec2(p1.x, p1.y)) - 0.3;
 
   // float s = sdSphere(p1, 4.0);
-  float g1 = sdGyroid2(p1, 0.5 + 1.0 * u_control1, 0.01);
+  float g1 = sdGyroid2(p1, 0.5 + 1.0 * u_gyroidOffset, 0.01);
   float g2 = sdGyroid3(p1, 0.5, 0.01);
   float d = smin(g1, g2, -0.1) * 0.5;
   // d = smin(s, d, -0.1);
@@ -204,5 +200,5 @@ void main() {
       col += vec3(1.0, 1.0, 1.0) * (1.0 - t);
   }
 
-  FragColor = vec4(vec3(1.0, 0.0, 0.0), 1.0);
+  FragColor = vec4(col, 1.0);
 }

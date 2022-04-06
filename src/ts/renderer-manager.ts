@@ -5,7 +5,7 @@ let renderer: Renderer = null
 let canvasContainer: HTMLDivElement
 let shaderList
 
-export const setShader = function (id) {
+export const setRenderer = function (id) {
   if (!shaderList) {
     return
   }
@@ -23,8 +23,10 @@ export const setShader = function (id) {
     renderer = null
   }
 
-  renderer = new Renderer(canvasContainer, shaderOptions)
-  renderer.animate()
+  if (!renderer) {
+    renderer = new Renderer(canvasContainer, shaderOptions)
+    renderer.animate()
+  }
 }
 
 export const setParameter = function (key, value) {
@@ -32,7 +34,7 @@ export const setParameter = function (key, value) {
 }
 
 export const getFps = function () {
-  if (renderer.fps) {
+  if (renderer?.fps) {
     return renderer.fps
   }
   return NaN
@@ -42,5 +44,5 @@ window.onload = () => {
   shaderList = getShaderList()
   canvasContainer = document.getElementById('canvas-container')
 
-  setShader(shaderList[0].id)
+  setRenderer(shaderList[0].id)
 }
