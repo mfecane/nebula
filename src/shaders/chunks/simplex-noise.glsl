@@ -79,22 +79,22 @@ float simplex_noise3(vec3 v) {
   return 42.0 * dot(m * m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
 }
 
-// float pbm_simplex_noise3(vec3 point) {
-//   int OCTAVES = 2;
+float pbm_simplex_noise3_no_quality(vec3 point) {
+  int OCTAVES = 5;
 
-//   float normalize_vector = 0.0;
-//   float value = 0.0;
-//   float scale = 0.5;
+  float normalize_vector = 0.0;
+  float value = 0.0;
+  float scale = 0.5;
 
-//   for(int i = 0; i < OCTAVES; i++) {
-//     value += simplex_noise3(point) * scale;
-//     normalize_vector += scale;
-//     point *= 2.0;
-//     scale *= 0.5;
-//   }
+  for(int i = 0; i < OCTAVES; i++) {
+    value += simplex_noise3(point) * scale;
+    normalize_vector += scale;
+    point *= 2.0;
+    scale *= 0.5;
+  }
 
-//   return value / normalize_vector;
-// }
+  return value / normalize_vector;
+}
 
 float pbm_simplex_noise3(vec3 point, float quality) {
   int OCTAVES = 0;

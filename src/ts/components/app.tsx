@@ -5,19 +5,20 @@ import ShaderList from 'ts/components/shader-list'
 import ShaderDetails from 'ts/components/shader-details'
 
 import StateContext from 'ts/state-context'
-import { setRenderer } from 'ts/renderer-manager'
+import { init, setRenderer } from 'ts/renderer-manager'
 
 export default () => {
   const [state, dispatch] = React.useReducer(reducer, initialState())
 
   useEffect(() => {
-    const id = localStorage.getItem('renderer_id')
+    init()
+    const id = +localStorage.getItem('renderer_id')
     if (!id) {
       return
     }
     setRenderer(id)
     dispatch({
-      type: 'setSahder',
+      type: 'setShader',
       payload: id,
     })
   }, [])

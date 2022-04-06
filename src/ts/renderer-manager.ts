@@ -11,7 +11,7 @@ export const setRenderer = function (id) {
   }
 
   const shaderOptions = shaderList.find(
-    ({ id: id1 }: { id: string }) => id1 + '' === id + ''
+    ({ id: id1 }: { id: string }) => id1 === id
   )
 
   if (!shaderOptions) {
@@ -41,7 +41,7 @@ export const getFps = function () {
   return NaN
 }
 
-window.onload = () => {
+export const init = function () {
   shaderList = getShaderList()
   canvasContainer = document.getElementById('canvas-container')
 }

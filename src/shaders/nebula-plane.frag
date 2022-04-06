@@ -12,15 +12,6 @@ uniform float u_mouseY;
 uniform float u_scrollValue;
 uniform sampler2D u_Sampler;
 
-uniform float u_control1;
-uniform float u_control2;
-uniform float u_control3;
-uniform float u_control4;
-uniform float u_control5;
-uniform float u_control6;
-uniform float u_control7;
-uniform float u_control8;
-
 #define MAX_STEPS 200
 #define MAX_DIST 3.0
 #define SURF_DIST 0.00001 // hit distance
@@ -35,7 +26,7 @@ $rand
 
 float densityFunction(vec3 point) {
   // shift space by noise
-  float n = pbm_simplex_noise3(1.0 * point);
+  float n = pbm_simplex_noise3_no_quality(1.0 * point);
   point = point * (1.0 + n * 0.2) + n * 0.2;
 
   // twist space

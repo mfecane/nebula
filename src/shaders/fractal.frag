@@ -11,14 +11,7 @@ uniform float u_mouseY;
 uniform float u_scrollValue;
 
 uniform float u_quality;
-uniform float u_control1;
-uniform float u_control2;
-uniform float u_control3;
-uniform float u_control4;
-uniform float u_control5;
-uniform float u_control6;
-uniform float u_control7;
-uniform float u_control8;
+uniform float u_thick;
 
 #define PI  3.14159265358
 #define TAU 6.28318530718
@@ -42,16 +35,9 @@ float min3(float v1, float v2, float v3, float k) {
 float mapDist(vec3 p) {
   vec3 p1 = twistSpace(p.yzx, 0.02);
 
-  // vec3 p1 = -0.5 + fract(p / 2.0);
+ p1 = -0.5 + fract(p1 / 2.0);
 
-  // float d = length(vec2(p1.x, p1.y)) - 0.3;
-
-  float d = min3(
-    length(vec2(p1.x, p1.y) * p1.z * p1.z * 10.0) - 0.05,
-    length(vec2(p1.y, p1.z) * p1.x * p1.x * 10.0) - 0.05,
-    length(vec2(p1.z, p1.x) * p1.y * p1.y * 10.0) - 0.05,
-    -0.05
-  );
+  float d = length(vec2(p1.x, p1.y)) - u_thick;
 
   // float d = abs(length(p1) - 0.6);
   // float d = sdGyroid(p, 1.0);

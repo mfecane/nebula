@@ -4,7 +4,7 @@
 
 - projet idea shader library
 - lost some project ideas
-- serizlize state to localstorage
+- report errors
 
 ## STUFF
 

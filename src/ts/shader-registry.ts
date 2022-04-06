@@ -50,9 +50,19 @@ addShader({
 import fractal from 'shaders/fractal.frag'
 
 addShader({
-  name: 'Twisted gyroid spheres',
-  description: 'Ray marched gyroid spheres with twist',
+  name: 'Pillars',
+  description: 'Simple raymarcher',
   vertexSource: squareVert,
   fragmentSource: fractal,
+  parameters: [{ id: 'thick', label: 'Thickness', default: 0.2 }],
+})
+
+import nebulaPlane from 'shaders/nebula-plane.frag'
+
+addShader({
+  name: 'nebulaPlane',
+  description: 'nebulaPlane',
+  vertexSource: squareVert,
+  fragmentSource: nebulaPlane,
   parameters: [],
 })
