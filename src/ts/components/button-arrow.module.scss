@@ -4,58 +4,56 @@
   background: none;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-.collapseButton.big {
+  gap: 12px;
   font-size: 22px;
+  border-radius: 26px;
+  height: 52px;
+  width: 52px;
+  padding: 0 20px;
+  background-color: #000;
+  transition: all 200ms ease-in-out;
 
   .arrowIcon {
-    width: 42px;
-    height: 42px;
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    transition: transform 200ms ease-out;
+    background-color: $accent;
+    mask: url(assets/arrow2.svg);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    transform: translateX(-8px) rotate(180deg);
   }
-}
 
-.arrowIcon {
-  display: inline-block;
-  background: rgb(255, 255, 255);
-  width: 32px;
-  height: 32px;
-  mask: url(assets/arrow.svg);
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-size: contain;
-  transition: transform 200ms ease-out;
-}
+  &.toggle {
+    width: auto;
 
-.arrowIcon.arrowUp {
-  transform: rotate(90deg);
+    .arrowIcon {
+      transform: rotate(0deg);
+    }
 
-  .collapseButton.toggle & {
-    transform: rotate(-90deg);
+    label {
+      opacity: 1;
+      cursor: pointer;
+      transition: opacity 200ms ease-out;
+    }
   }
-}
 
-.collapseButton:hover .arrowIcon {
-  background: $accent;
-}
+  label {
+    white-space: nowrap;
+    color: $accent;
+    opacity: 0;
+  }
 
-.collapseButton:hover label {
-  color: $accent;
-}
+  &:hover {
+    label {
+      color: $light;
+    }
 
-.collapseButton.toggle .arrowIcon {
-  transform: rotate(180deg);
-}
-
-.collapseButton.toggle label {
-  opacity: 1;
-  cursor: pointer;
-  transition: opacity 200ms ease-out;
-}
-
-.collapseButton label {
-  opacity: 0;
+    .arrowIcon {
+      background-color: $light;
+    }
+  }
 }

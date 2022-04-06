@@ -6,18 +6,21 @@
   left: 0;
   height: 100vh;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
   transition: all 300ms ease-in;
-}
-
-.container.hidden {
-  left: -420px;
+  flex: 0 0 52px;
 }
 
 .list {
-  width: 420px;
-  height: 100vh;
-  background-color: $dark;
+  flex: 1 0 auto;
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.header {
+  font-size: 32px;
+  margin: 42px 32px 32px 32px;
+  color: white;
+  font-weight: 600;
 }

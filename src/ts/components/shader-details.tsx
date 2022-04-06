@@ -1,43 +1,40 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext } from 'react'
 import StateContext from 'ts/state-context'
 
-import styles from 'ts/components/shader-details.module.scss'
-import ShaderFpsBadge from 'ts/components/shader-fps-badge'
 import ShaderControls from 'ts/components/shader-controls'
-import ButtonArrow from 'ts/components/button-arrow'
+import { PAGES } from 'ts/pages'
+
+import styles from 'ts/components/shader-details.module.scss'
 
 const ShaderDetails = () => {
-  const [{ shaderList, selectedShader, menuVisible }] = useContext(StateContext)
-  const [collapsed, setCollapsed] = useState(true)
+  const [{ shaderList, selectedShader }, dispatch] = useContext(StateContext)
 
-  const shader = shaderList.find(({ id }) => id === selectedShader)
-
-  const collapse = () => {
-    setCollapsed(!collapsed)
-  }
+  const shader = shaderList.find(
+    ({ id }: { id: number }) => id === selectedShader
+  )
 
   if (shader) {
     return (
-      <div className={`${styles.container} ${menuVisible ? styles.shift : ''}`}>
+      <div className={styles.container}>
+        <div>
+          <button
+            className={styles.backButton}
+            onClick={() => {
+              dispatch({
+                type: 'setPage',
+                payload: PAGES.PAGE_LIST,
+              })
+            }}
+          >
+            <i></i>
+            <label>To gallery</label>
+          </button>
+        </div>
         <div className={styles.header}>
           <h2 className={styles.title}>{shader.name}</h2>
-          <div className={styles.buttonContainer}>
-            <ButtonArrow
-              label={'Show options'}
-              direction={0}
-              onClick={collapse}
-              labelPos={0}
-              big
-            />
-          </div>
-          <ShaderFpsBadge />
         </div>
-        <div
-          className={`${styles.controlContainer} ${
-            collapsed ? styles.collapsed : null
-          }`}
-        >
-          {!collapsed ? <ShaderControls /> : null}
+        <div className={styles.controlContainer}>
+          <ShaderControls />
         </div>
       </div>
     )

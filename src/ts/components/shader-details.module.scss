@@ -1,19 +1,7 @@
 @import "css/config.scss";
 
 .container {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 800px;
-  border-radius: 2px;
   padding: 22px 32px;
-  background-color: $dark;
-  transform: translateX(-50%);
-  transition: all 200ms ease-out;
-}
-
-.container.shift {
-  transform: translateX(calc(-50% + 200px));
 }
 
 .title {
@@ -39,11 +27,41 @@
   opacity: 1;
 }
 
-.controlContainer.collapsed {
-  min-height: 0px;
-  opacity: 0;
-}
+.backButton {
+  margin: 24px 0 32px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 
-.buttonContainer {
-  transform: translateY(6px);
+  i {
+    display: inline-block;
+    background: rgb(255, 255, 255);
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    mask: url(assets/arrow.svg);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    transition: transform 200ms ease-out;
+    transform: rotate(180deg);
+  }
+
+  label {
+    color: $light;
+    font-size: 20px;
+  }
+
+  &:hover {
+    cursor: pointer;
+
+    i {
+      background: $accent;
+    }
+
+    label {
+      cursor: pointer;
+      color: $accent;
+    }
+  }
 }

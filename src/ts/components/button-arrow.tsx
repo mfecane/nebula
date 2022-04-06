@@ -2,9 +2,7 @@ import React, { useState } from 'react'
 
 import styles from 'ts/components/button-arrow.module.scss'
 
-const directionClasses = [styles.arrowUp, styles.arrowRight]
-
-export default ({ direction, onClick, label, labelPos, big = false }) => {
+export default ({ onClick, label }) => {
   const [toggle, setToggle] = useState(true)
 
   const clickHandler = function (e) {
@@ -12,18 +10,15 @@ export default ({ direction, onClick, label, labelPos, big = false }) => {
     onClick(e)
   }
 
-  const labelJSX = <label>{label}</label>
+  const buttonClassses = [styles.collapseButton]
+  if (toggle) {
+    buttonClassses.push(styles.toggle)
+  }
 
   return (
-    <button
-      className={`${styles.collapseButton} ${big ? styles.big : ''} ${
-        toggle ? styles.toggle : ''
-      }`}
-      onClick={clickHandler}
-    >
-      {labelPos === 0 ? labelJSX : null}
-      <i className={`${styles.arrowIcon} ${directionClasses[direction]}`} />
-      {labelPos === 1 ? labelJSX : null}
+    <button className={buttonClassses.join(' ')} onClick={clickHandler}>
+      <i className={styles.arrowIcon} />
+      <label>{label}</label>
     </button>
   )
 }
