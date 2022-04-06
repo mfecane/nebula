@@ -40,7 +40,7 @@ float min3(float v1, float v2, float v3, float k) {
 }
 
 float mapDist(vec3 p) {
-  p = twistSpace(p.yzx, 0.02);
+  vec3 p1 = twistSpace(p.yzx, 0.02);
 
   // vec3 p1 = -0.5 + fract(p / 2.0);
 

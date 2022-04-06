@@ -11,7 +11,7 @@ export const setRenderer = function (id) {
   }
 
   const shaderOptions = shaderList.find(
-    ({ id: id1 }: { id: string }) => id1 === id
+    ({ id: id1 }: { id: string }) => id1 + '' === id + ''
   )
 
   if (!shaderOptions) {
@@ -24,6 +24,7 @@ export const setRenderer = function (id) {
   }
 
   if (!renderer) {
+    localStorage.setItem('renderer_id', id)
     renderer = new Renderer(canvasContainer, shaderOptions)
     renderer.animate()
   }
@@ -43,6 +44,4 @@ export const getFps = function () {
 window.onload = () => {
   shaderList = getShaderList()
   canvasContainer = document.getElementById('canvas-container')
-
-  setRenderer(shaderList[0].id)
 }

@@ -11,8 +11,8 @@ export const getShaderList = () => {
 }
 
 addShader({
-  name: 'Stars shader v0.1',
-  description: 'Lorem, ipsum dolor sit amet consectetur adipisicing elit.',
+  name: 'Burning filament strings',
+  description: '',
   vertexSource: squareVert,
   fragmentSource: raymarchGeo,
   parameters: [
@@ -45,4 +45,14 @@ addShader({
     { id: 'control3', label: 'Gyroid density', default: 0.5 },
     { id: 'control4', label: 'Twist space', default: 0.5 },
   ],
+})
+
+import fractal from 'shaders/fractal.frag'
+
+addShader({
+  name: 'Twisted gyroid spheres',
+  description: 'Ray marched gyroid spheres with twist',
+  vertexSource: squareVert,
+  fragmentSource: fractal,
+  parameters: [],
 })
