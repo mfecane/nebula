@@ -24,12 +24,12 @@ export default class Shader {
 
     gl.compileShader(vertShader, vertSrc)
     if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
-      this.displayError(vertShader, vertexSource, 'vertex')
+      this.throwError(vertShader, vertexSource, 'vertex')
     }
 
     gl.compileShader(fragShader, fragSrc)
     if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
-      this.displayError(fragShader, fragmentSource, 'fragment')
+      this.throwError(fragShader, fragmentSource, 'fragment')
     }
 
     const program = gl.createProgram()
@@ -95,7 +95,7 @@ export default class Shader {
     )
   }
 
-  displayError(shader, source, type): void {
+  throwError(shader, source, type): void {
     const re = RegExp('ERROR:\\s+\\d+:(\\d+)', 'g')
     const error = this.gl.getShaderInfoLog(shader).replace(/\x00/g, '').trim()
     let msg = `Error compiling ${type} shader: \n${error}\non:`
@@ -115,6 +115,6 @@ export default class Shader {
         msg += `\n${line}: ${lines[line].trim()}`
       }
     })
-    console.error(msg)
+    throw new Error(msg)
   }
 }

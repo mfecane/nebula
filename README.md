@@ -4,7 +4,7 @@
 
 - projet idea shader library
 - lost some project ideas
-- report errors
+- check orbit controls
 
 ## STUFF
 

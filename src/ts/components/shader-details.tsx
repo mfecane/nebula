@@ -8,7 +8,7 @@ import ButtonArrow from 'ts/components/button-arrow'
 
 const ShaderDetails = () => {
   const [{ shaderList, selectedShader, menuVisible }] = useContext(StateContext)
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
 
   const shader = shaderList.find(({ id }) => id === selectedShader)
 

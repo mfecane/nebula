@@ -1,8 +1,10 @@
 @import "css/config.scss";
 
-body, button {
+body,
+button {
   font-family: Montserrat, sans-serif;
   color: $light;
+  background-color: $dark;
 }
 
 #canvas-container {
@@ -21,7 +23,7 @@ body, button {
   background: rgba(36, 36, 36, 0.5);
   z-index: 1;
   padding: 10px;
-  display:  grid;
+  display: grid;
   grid-template-columns: 3fr 2fr;
   align-items: center;
   gap: 16px;

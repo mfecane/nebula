@@ -2,18 +2,13 @@ import Shader from 'ts/webgl/shader'
 import { getParameters } from 'ts/parameters'
 
 import {
-  init as initControls,
-  getValue as getControlValue,
-} from 'ts/components/controls'
-
-import {
   init as orbitControlInit,
   animate as orbitControlAnimate,
   getMouseControl,
 } from 'ts/components/orbit-control'
 
 interface rendrerOptions {
-  id: string
+  id: number
   vertShaderSrc: string
   fragShaderSrc: string
   parameters: []
@@ -61,7 +56,6 @@ export class Renderer {
 
     orbitControlInit()
     orbitControlAnimate()
-    initControls()
 
     this.mainShader = new Shader(this.gl)
     this.mainShader.createProgram(this.vertexSource, this.fragmentSource)

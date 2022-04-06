@@ -14,6 +14,8 @@ let scrollValueMax = 1
 let scrollStep = 0.125
 let scrollSpeed = 0
 
+let inited = false
+
 let targetScrollValue = 1
 
 const handleMouseDown = function (e: MouseEvent) {
@@ -90,10 +92,12 @@ export const getMouseControl = function (): [number, number, number] {
 }
 
 export const init = function (): void {
-  window.addEventListener('mousemove', handleMouseMove)
-  window.addEventListener('mousedown', handleMouseDown)
-  window.addEventListener('mouseup', handleMouseUp)
-  document.addEventListener('wheel', handleScroll)
+  if (!inited) {
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mousedown', handleMouseDown)
+    window.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('wheel', handleScroll)
+  }
 }
 
 export const animate = function (): void {

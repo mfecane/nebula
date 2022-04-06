@@ -5,7 +5,7 @@ import styles from 'ts/components/button-arrow.module.scss'
 const directionClasses = [styles.arrowUp, styles.arrowRight]
 
 export default ({ direction, onClick, label, labelPos, big = false }) => {
-  const [toggle, setToggle] = useState(false)
+  const [toggle, setToggle] = useState(true)
 
   const clickHandler = function (e) {
     setToggle(!toggle)

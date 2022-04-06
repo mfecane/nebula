@@ -3,7 +3,12 @@ import { getShaderList } from 'ts/shader-registry'
 export const initialState = function () {
   const shaderList = getShaderList()
   const id = shaderList[0].id
-  return { shaderList: shaderList, menuVisible: false, selectedShader: id }
+  return {
+    shaderList: shaderList,
+    menuVisible: false,
+    selectedShader: id,
+    error: null,
+  }
 }
 
 export default (state, action) => {
@@ -15,6 +20,9 @@ export default (state, action) => {
       break
     case 'toggleMenu':
       state = { ...state, menuVisible: !state.menuVisible }
+      break
+    case 'setError':
+      state = { ...state, error: action.payload }
       break
   }
 

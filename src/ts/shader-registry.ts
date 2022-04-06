@@ -66,3 +66,13 @@ addShader({
   fragmentSource: nebulaPlane,
   parameters: [],
 })
+
+import fads7fa7 from 'shaders/string-gyroid.frag'
+
+addShader({
+  name: 'String gyroid',
+  description: '',
+  vertexSource: squareVert,
+  fragmentSource: fads7fa7,
+  parameters: [],
+})

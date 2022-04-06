@@ -7,7 +7,7 @@
   width: 800px;
   border-radius: 2px;
   padding: 22px 32px;
-  background-color: rgba(43, 43, 43, 0.6);
+  background-color: $dark;
   transform: translateX(-50%);
   transition: all 200ms ease-out;
 }

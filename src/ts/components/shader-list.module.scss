@@ -1,3 +1,5 @@
+@import "css/config.scss";
+
 .container {
   position: absolute;
   top: 0;
@@ -15,7 +17,7 @@
 .list {
   width: 420px;
   height: 100vh;
-  background-color: rgba(43, 43, 43, 0.6);
+  background-color: $dark;
   overflow-x: hidden;
   overflow-y: auto;
 }
