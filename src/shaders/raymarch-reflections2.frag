@@ -15,6 +15,7 @@ $lib
 $distances
 $noise
 $simplex-noise
+$col
 
 #define PI  3.14159265358
 #define TAU 6.28318530718
@@ -24,6 +25,11 @@ $simplex-noise
 #define SURF_DIST 0.005 // hit distance
 
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
+
+vec3 hash33(vec3 p) {
+    float n = sin(dot(p, vec3(7, 157, 113)));
+    return fract(vec3(2097152, 262144, 32768)*n);
+}
 
 float dPlane(vec3 point) {
   float dist = point.y + 1.0;
@@ -54,10 +60,6 @@ vec2 dSphere(vec3 point) {
   return vec2(dist, id);
 }
 
-// split sphere by chunks, reflect in floor
-// use this irregular shpere
-// return length(point) - 0.7 * (cos(point.x) + sin(point.y));
-
 float sceneDistance(vec3 point) {
   vec2 sphere = dSphere(point);
   float plane = dPlane(point);
@@ -84,21 +86,26 @@ vec2 rayMarch(vec3 ro, vec3 rd) {
     vec3 p = ro + rd * dO;
 
     float dS = sceneDistance(p);
-    float noise = Noise31(p);
-    float id = sceneMaterial(p + Noise31(p) * 0.1);
-    // max(Noise31(p) - 0.5, 0.0)
-    // glow += smoothstep(0.3, 0.0, dS) * 0.1 * id;
-    glow += 0.05 * max(id - 0.7, 0.0);
 
     dO += dS;
 
-    if (abs(dS) < SURF_DIST) {
+    if (abs(dS) < SURF_DIST || dO > MAX_DIST) {
       break;
     }
+  }
 
-    if (dO > MAX_DIST) {
-      break;
+  vec3 p = ro + rd * dO;
+  float mat = sceneMaterial(p);
+  if (mat > 1.0 && dO < MAX_DIST) {
+    glow = 0.0;
+    for (int j = 0; j < 16; ++j) {
+      vec3 samplePoint = p +
+      (
+        hash33(p + vec3(cos(u_time), 0.0, sin(u_time)) + 0.2523 * p.zxy * float(j)
+      ) - 0.5) * 0.02;
+      glow += sceneMaterial(samplePoint) / 33.0;
     }
+    glow = smoothstep(0.5, 0.9, glow * glow);
   }
 
   return vec2(dO, glow);
@@ -114,6 +121,68 @@ vec3 GetNormal(vec3 p) {
   );
 
   return normalize(n);
+}
+
+vec3 renderOne(vec3 rayOrigin, vec3 rayDirection) {
+  vec2 rm = rayMarch(rayOrigin, rayDirection);
+  float d = rm.x;
+  float glow = rm.y;
+
+  // TODO ::: add glow
+  vec3 col;
+  float dif = 0.0;
+  float dif1 = 0.0;
+
+  if(d < MAX_DIST) {
+    vec3 p = rayOrigin + rayDirection * d;
+    vec3 n = GetNormal(p);
+    vec3 r = reflect(rayDirection, n);
+
+    float mat = sceneMaterial(p);
+
+    dif = clamp(mat - 1.5, 0.0, 1.0) * 2.0;
+    // dif *= mat;
+
+    if (mat == 0.0) {
+      vec3 shiftpoint = p +
+        vec3(
+          cos(u_time / 20.0 + 1.3255),
+          u_time / 20.0,
+          sin(u_time / 20.0 + 2.5342)
+        );
+
+      float shift = pbm_simplex_noise3(shiftpoint * 10.0);
+      col = mix(vec3(0.8, 1.0, 0.9), vec3(0.4, 0.6, 0.9), shift) *
+        max((0.2 - length(p) / 10.0), 0.0);
+      vec3 reflectDirection = normalize(r * vec3(0.5, 1.0, 0.5)) +
+        vec3(shift) * 0.2;
+      vec3 reflectOrigin = p + reflectDirection * SURF_DIST  + 0.02;
+
+      vec2 rm2 = rayMarch(reflectOrigin, reflectDirection);
+      float d1 = rm2.x;
+      float glow1 = rm2.y;
+
+      if (d1 < MAX_DIST) {
+        vec3 p1 = reflectOrigin + reflectDirection * d1;
+        vec3 n1 = GetNormal(p1);
+        float matu = sceneMaterial(p1);
+        // dif += clamp(matu - 1.5, 0.0, 1.0) * 2.0;
+        col += hsl2rgb(vec3(smoothstep(1.0, 2.0, matu), 1.0, 0.6));
+        col *= glow1 * 1.0;
+      }
+    } else {
+      // TODO ::: tweak shit shit
+
+      float fac = dot(n, normalize(vec3(0.0, 1.0, 0.0))) * 0.5 + 0.5;
+
+      col += hsl2rgb(vec3(smoothstep(1.0, 2.0, mat), 1.0, 0.6));
+
+      col *= (0.8 - fac*fac*fac);
+      col *= glow * 2.0;
+    }
+  }
+
+  return col;
 }
 
 void main() {
@@ -132,53 +201,10 @@ void main() {
   R(rayOrigin.yz, -rot.x);
   R(rayOrigin.xz, rot.y);
 
-  vec2 rm = rayMarch(rayOrigin, rayDirection);
-  float d = rm.x;
-  float glow = rm.y;
+  vec3 col = renderOne(rayOrigin, rayDirection);
 
-  // TODO ::: add glow
-  vec3 col;
-  float dif = 0.0;
-  float dif1 = 0.0;
-  if(d < MAX_DIST) {
-    vec3 p = rayOrigin + rayDirection * d;
-    vec3 n = GetNormal(p);
-    vec3 r = reflect(rayDirection, n);
 
-    float mat = sceneMaterial(p);
-
-    dif = clamp(mat - 1.5, 0.0, 1.0) * 2.0;
-    // dif *= mat;
-
-    if (mat == 0.0) {
-      dif = max((0.2 - length(p) / 20.0), 0.0);
-
-      float shift = pbm_simplex_noise3(p * (20.0 + 5.0 * sin(u_time))) * 0.1;
-      vec3 reflectDirection = normalize(r * vec3(0.5, 1.0, 0.5)) +
-        vec3(shift);
-      vec3 reflectOrigin = p + reflectDirection * SURF_DIST  + 0.02;
-
-      vec2 rm2 = rayMarch(reflectOrigin, reflectDirection);
-      float d1 = rm2.x;
-
-      if (d1 < MAX_DIST) {
-        col.b = 1.0;
-
-        vec3 p1 = reflectOrigin + reflectDirection * d1;
-        vec3 n1 = GetNormal(p1);
-        float mat = sceneMaterial(p1);
-        dif += clamp(mat - 1.5, 0.0, 1.0) * 2.0;
-        dif = mix(dif, dif1, (1.0 - mat * 0.3));
-      }
-    } else {
-      // TODO ::: tweak shit shit
-      float fac = dot(n, normalize(vec3(0.0, 1.0, 0.0))) * 0.5 + 0.5;
-      dif *= (0.8 - fac*fac*fac);
-      dif += glow;
-    }
-  }
-
-  col = vec3(dif);
-  col=pow(col, vec3(0.5 + 2.0 * u_gamma));
+  //vec3 col = vec3(dif);
+  //col=pow(col, vec3(0.5 + 2.0 * u_gamma));
   FragColor = vec4(col, 1.0);
 }
