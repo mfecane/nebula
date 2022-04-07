@@ -144,3 +144,13 @@ addShader({
     { id: 'quality', label: 'Quality', default: 0.5 },
   ],
 })
+
+import sh007 from 'shaders/raymarch-reflections.frag'
+
+addShader({
+  name: 'Raymarch with reflections',
+  description: '',
+  vertexSource: squareVert,
+  fragmentSource: sh007,
+  parameters: [],
+})
