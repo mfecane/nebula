@@ -1,5 +1,4 @@
 import Shader from 'ts/webgl/shader'
-import { getParameters } from 'ts/parameters'
 
 import {
   init as orbitControlInit,
@@ -14,7 +13,7 @@ interface rendrerOptions {
   parameters: []
 }
 
-export class Renderer {
+export default class Renderer {
   width = 0
   height = 0
   vertexSource = ''
@@ -39,12 +38,8 @@ export class Renderer {
 
   constructor(root: HTMLDivElement, options: rendrerOptions) {
     this.options = options
-    this.vertexSource = options.vertexSource
-    this.fragmentSource = options.fragmentSource
-
     this.root = root
     this.canvas = document.createElement(`canvas`)
-
     this.root.appendChild(this.canvas)
     this.canvas.id = 'canvas'
 
@@ -56,18 +51,46 @@ export class Renderer {
 
     orbitControlInit()
     orbitControlAnimate()
+  }
+
+  init(): void {
+    this.vertexSource = this.options.vertexSource
+    this.fragmentSource = this.options.fragmentSource
 
     this.mainShader = new Shader(this.gl)
     this.mainShader.createProgram(this.vertexSource, this.fragmentSource)
 
+    this.createSquarePositions()
+
+    this.mainShader.useProgram()
+    this.mainShader.setPositions('aPos')
+
+    this.mainShader.addUniform('u_MVP', '4fv')
+    this.mainShader.addUniform('u_time', '1f')
+    this.mainShader.addUniform('u_mouseX', '1f')
+    this.mainShader.addUniform('u_mouseY', '1f')
+    this.mainShader.addUniform('u_scrollValue', '1f')
+    this.mainShader.addUniform('u_quality', '1f')
+
+    this.addUniformParameters()
+  }
+
+  addUniformParameters(): void {
+    this.options.parameters.forEach((item: { id: string; default: number }) => {
+      this.mainShader.addUniform(`u_${item.id}`, '1f')
+      this.parameters[item.id] = item.default
+    })
+  }
+
+  createSquarePositions(): void {
     const vertexBuffer = this.gl.createBuffer()
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexBuffer)
 
     // prettier-ignore
     const positions = [
-        -1.0,  -1.0,
-        1.0,  -1.0,
-        1.0,  1.0,
+        -1.0, -1.0,
+         1.0, -1.0,
+         1.0,  1.0,
         -1.0,  1.0
       ];
     this.gl.bufferData(
@@ -90,21 +113,6 @@ export class Renderer {
       new Uint16Array(indices),
       this.gl.STATIC_DRAW
     )
-
-    this.mainShader.useProgram()
-    this.mainShader.setPositions('aPos')
-
-    this.mainShader.addUniform('u_MVP', '4fv')
-    this.mainShader.addUniform('u_time', '1f')
-    this.mainShader.addUniform('u_mouseX', '1f')
-    this.mainShader.addUniform('u_mouseY', '1f')
-    this.mainShader.addUniform('u_scrollValue', '1f')
-    this.mainShader.addUniform('u_quality', '1f')
-
-    options.parameters.forEach((item: { id: string; default: number }) => {
-      this.mainShader.addUniform(`u_${item.id}`, '1f')
-      this.parameters[item.id] = item.default
-    })
   }
 
   destroy(): void {
@@ -114,7 +122,7 @@ export class Renderer {
   }
 
   renderFrame(): void {
-    this.proj = this.calculateMVP()
+    this.proj = this.calculateMVP(this.width, this.height)
 
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
     this.mainShader.useProgram()
@@ -127,14 +135,18 @@ export class Renderer {
     this.mainShader.setUniform('u_scrollValue', scrollValue)
     this.mainShader.setUniform('u_quality', 1.0)
 
-    this.options.parameters.forEach(({ id }: { id: string }) => {
-      const value = this.parameters[id]
-      this.mainShader.setUniform(`u_${id}`, value)
-    })
+    this.setUniformParameters()
 
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0)
     this.gl.clear(this.gl.COLOR_BUFFER_BIT)
     this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0)
+  }
+
+  setUniformParameters(): void {
+    this.options.parameters.forEach(({ id }: { id: string }) => {
+      const value = this.parameters[id]
+      this.mainShader.setUniform(`u_${id}`, value)
+    })
   }
 
   animate(): void {
@@ -154,9 +166,9 @@ export class Renderer {
     this.gl.viewport(0, 0, this.width, this.height)
   }
 
-  calculateMVP(): number[] {
-    const left = -this.width / this.height
-    const right = this.width / this.height
+  calculateMVP(width, height): number[] {
+    const left = -width / height
+    const right = width / height
 
     const bottom = -1.0
     const top = 1.0

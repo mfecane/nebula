@@ -18,7 +18,11 @@ export default (state, action) => {
 
   switch (type) {
     case 'setShader':
-      state = { ...state, selectedShader: payload, page: PAGES.PAGE_DETAILS }
+      state = {
+        ...state,
+        selectedShader: payload,
+        page: PAGES.PAGE_DETAILS,
+      }
       break
 
     case 'setPage':

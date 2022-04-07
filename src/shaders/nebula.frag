@@ -417,9 +417,9 @@ float rayMarchLight(vec3 rayOrigin, vec3 rayDirection) {
 float rayMarchDensity(vec3 rayOrigin, vec3 rayDirection) {
   float distanceStep = 0.05;
   vec3 lightPos = normalize(vec3(
-    0.5 * (cos(u_control2 * TAU) - sin(u_control2 * TAU)),
+    0.5 * (cos(TAU) - sin(TAU)),
     0.5,
-    0.5 * (sin(u_control2 * TAU) + cos(u_control2 * TAU))
+    0.5 * (sin(TAU) + cos(TAU))
   ));
 
   float maxDistance = 0.0;
@@ -564,7 +564,7 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 
       // enforce minimum stepsize
       // minor effect
-      dist = max(dist, 0.1 * u_control8);
+      dist = max(dist, 0.1);
 
       // DITHERING
       dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));

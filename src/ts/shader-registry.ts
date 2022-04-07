@@ -86,20 +86,10 @@ addShader({
   fragmentSource: jhsf76fd,
   parameters: [
     { id: 'control1', label: 'Radius', default: 0.5 },
-    { id: 'control2', label: 'Radius', default: 0.5 },
-    { id: 'control3', label: 'Radius', default: 0.5 },
-    { id: 'control5', label: 'Radius', default: 0.5 },
+    { id: 'control2', label: 'Gyroid density', default: 0.5 },
+    { id: 'control3', label: 'Stretch', default: 0.5 },
+    { id: 'control5', label: 'Twist', default: 0.5 },
   ],
-})
-
-import sh002 from 'shaders/squibles.frag'
-
-addShader({
-  name: 'Squibles',
-  description: 'Basic raymarcher',
-  vertexSource: squareVert,
-  fragmentSource: sh002,
-  parameters: [{ id: 'control1', label: 'Pixelate', default: 0.5 }],
 })
 
 import sh003 from 'shaders/nebula.frag'
@@ -110,21 +100,47 @@ addShader({
   vertexSource: squareVert,
   fragmentSource: sh003,
   parameters: [
-    { id: 'control3', label: 'Pixelate', default: 0.5 },
-    { id: 'control4', label: 'Pixelate', default: 0.5 },
-    { id: 'control1', label: 'Pixelate', default: 0.5 },
-    { id: 'control2', label: 'Pixelate', default: 0.5 },
-    { id: 'control5', label: 'Pixelate', default: 0.5 },
-    { id: 'control8', label: 'Pixelate', default: 0.5 },
+    { id: 'control3', label: 'Volume', default: 0.5 },
+    { id: 'control4', label: 'Volume2', default: 0.5 },
+    { id: 'control1', label: 'Volume3', default: 0.5 },
+    { id: 'control5', label: 'Light', default: 0.5 },
   ],
+})
+
+import sh002 from 'shaders/squibles.frag'
+
+addShader({
+  name: 'Bubbles 1',
+  description: '',
+  vertexSource: squareVert,
+  fragmentSource: sh002,
+  parameters: [{ id: 'control1', label: 'Pixelate', default: 0.5 }],
 })
 
 import sh004 from 'shaders/bubbles-2.frag'
 
 addShader({
   name: 'Bubbles 2',
-  description: 'Basic raymarcher',
+  description: 'Translucent bubbles',
   vertexSource: squareVert,
   fragmentSource: sh004,
   parameters: [],
+})
+
+import sh005 from 'shaders/nebula-3.frag'
+import sh006 from 'shaders/background2.frag'
+
+addShader({
+  name: 'Nebula with bg',
+  description: 'Caution! Heavy.',
+  vertexSource: squareVert,
+  fragmentSource: sh005,
+  bgVertexSource: squareVert,
+  bgFragmentSource: sh006,
+  type: 'bg',
+  parameters: [
+    { id: 'control1', label: 'Pulse', default: 0.5 },
+    { id: 'control2', label: 'Вздръжне эффект', default: 0.5 },
+    { id: 'quality', label: 'Quality', default: 0.5 },
+  ],
 })

@@ -8,8 +8,10 @@ export default () => {
   if (error) {
     return (
       <div className={styles.container}>
-        <h3>Shader error</h3>
-        {error.toString()}
+        <div className={styles.inner}>
+          <h3>Shader error</h3>
+          {error.toString()}
+        </div>
       </div>
     )
   }

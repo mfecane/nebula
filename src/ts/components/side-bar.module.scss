@@ -8,6 +8,7 @@
   height: 100vh;
   background: $dark;
   transition: all 200ms ease-in-out;
+  z-index: 1;
 }
 
 .collapsed {

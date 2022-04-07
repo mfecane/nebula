@@ -40,13 +40,13 @@ float min3(float v1, float v2, float v3, float k) {
 }
 
 vec3 randomSpaceShift(vec3 p) {
-  p += pbm_simplex_noise3(p, 0.0) * u_control5;
+  p += pbm_simplex_noise3(p) * u_control5;
   return p;
 }
 
 float mapDist(vec3 p) {
   //vec3 p1 = shwistSpace(p.xyz, -0.2 + 0.4 * u_control4);
-  vec3 p1 = randomSpaceShift(p);
+  vec3 p1 = p;
   // vec3 p1 = shwankSpace(p, u_control2);
 
   // don't do this, trust me
