@@ -1,10 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { setParameter } from 'ts/renderer-manager'
 
 import styles from 'ts/components/shader-control.module.scss'
 
 const ShaderControl = ({ item }) => {
-  const ref = useRef()
   const [value, setValue] = useState(0.0)
 
   const label = item.label
@@ -18,10 +17,6 @@ const ShaderControl = ({ item }) => {
 
   useEffect(() => {
     setValue(item.default)
-
-    ref.current.addEventListener('mousedown', (e) => {
-      e.stopPropagation()
-    })
   }, [])
 
   return (
@@ -32,7 +27,6 @@ const ShaderControl = ({ item }) => {
       </div>
       <div className={styles.header}>
         <input
-          ref={ref}
           type="range"
           min="0"
           max="1"

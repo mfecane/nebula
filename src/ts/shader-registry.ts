@@ -60,7 +60,7 @@ addShader({
 import nebulaPlane from 'shaders/nebula-plane.frag'
 
 addShader({
-  name: 'nebulaPlane',
+  name: 'Twisted mess',
   description: 'nebulaPlane',
   vertexSource: squareVert,
   fragmentSource: nebulaPlane,
@@ -74,5 +74,57 @@ addShader({
   description: '',
   vertexSource: squareVert,
   fragmentSource: fads7fa7,
+  parameters: [],
+})
+
+import jhsf76fd from 'shaders/shader-001.frag'
+
+addShader({
+  name: 'Sphere + gyroid',
+  description: 'Basic raymarcher',
+  vertexSource: squareVert,
+  fragmentSource: jhsf76fd,
+  parameters: [
+    { id: 'control1', label: 'Radius', default: 0.5 },
+    { id: 'control2', label: 'Radius', default: 0.5 },
+    { id: 'control3', label: 'Radius', default: 0.5 },
+    { id: 'control5', label: 'Radius', default: 0.5 },
+  ],
+})
+
+import sh002 from 'shaders/squibles.frag'
+
+addShader({
+  name: 'Squibles',
+  description: 'Basic raymarcher',
+  vertexSource: squareVert,
+  fragmentSource: sh002,
+  parameters: [{ id: 'control1', label: 'Pixelate', default: 0.5 }],
+})
+
+import sh003 from 'shaders/nebula.frag'
+
+addShader({
+  name: 'Nebula',
+  description: 'Basic raymarcher',
+  vertexSource: squareVert,
+  fragmentSource: sh003,
+  parameters: [
+    { id: 'control3', label: 'Pixelate', default: 0.5 },
+    { id: 'control4', label: 'Pixelate', default: 0.5 },
+    { id: 'control1', label: 'Pixelate', default: 0.5 },
+    { id: 'control2', label: 'Pixelate', default: 0.5 },
+    { id: 'control5', label: 'Pixelate', default: 0.5 },
+    { id: 'control8', label: 'Pixelate', default: 0.5 },
+  ],
+})
+
+import sh004 from 'shaders/bubbles-2.frag'
+
+addShader({
+  name: 'Bubbles 2',
+  description: 'Basic raymarcher',
+  vertexSource: squareVert,
+  fragmentSource: sh004,
   parameters: [],
 })

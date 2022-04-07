@@ -9,16 +9,17 @@
   flex-direction: column;
   align-items: stretch;
   transition: all 300ms ease-in;
-  flex: 0 0 52px;
+  overflow: hidden;
 }
 
 .list {
-  flex: 1 0 auto;
+  flex: 0 1 auto;
   overflow-x: hidden;
   overflow-y: auto;
 }
 
 .header {
+  flex: 0 0 52px;
   font-size: 32px;
   margin: 42px 32px 32px 32px;
   color: white;
