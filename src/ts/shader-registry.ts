@@ -148,9 +148,19 @@ addShader({
 import sh007 from 'shaders/raymarch-reflections.frag'
 
 addShader({
-  name: 'Raymarch with reflections',
+  name: 'Crazy shit reflections',
   description: '',
   vertexSource: squareVert,
   fragmentSource: sh007,
   parameters: [],
+})
+
+import sh008 from 'shaders/raymarch-reflections2.frag'
+
+addShader({
+  name: 'Raymarch with reflections',
+  description: '',
+  vertexSource: squareVert,
+  fragmentSource: sh008,
+  parameters: [{ id: 'gamma', label: 'Gamma', default: 0.5 }],
 })

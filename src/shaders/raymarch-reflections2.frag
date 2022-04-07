@@ -1,0 +1,184 @@
+#version 300 es
+
+precision highp float;
+
+out vec4 FragColor;
+in vec2 uv;
+
+uniform float u_time;
+uniform float u_mouseX;
+uniform float u_mouseY;
+uniform float u_scrollValue;
+uniform float u_gamma;
+
+$lib
+$distances
+$noise
+$simplex-noise
+
+#define PI  3.14159265358
+#define TAU 6.28318530718
+
+#define MAX_STEPS 200
+#define MAX_DIST 30.0
+#define SURF_DIST 0.005 // hit distance
+
+#define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
+
+float dPlane(vec3 point) {
+  float dist = point.y + 1.0;
+  return dist;
+}
+
+vec2 dSphere(vec3 point) {
+  float angle = 0.0;
+	if (point.z != 0.0) {
+    angle = clamp(atan(point.x, point.z), -PI, PI);
+  }
+	else if (point.x > 0.0) {
+		angle = PI * 0.5;
+	}
+	else {
+		angle = -PI * 0.5;
+	}
+
+  vec2 param = vec2(
+    point.y * 4.0,
+    angle
+  ) * 4.0;
+
+  float id = 1.0 + Noise21(floor(param));
+
+  float dist = length(point) - 0.7 * (cos(point.x) + sin(point.y));
+
+  return vec2(dist, id);
+}
+
+// split sphere by chunks, reflect in floor
+// use this irregular shpere
+// return length(point) - 0.7 * (cos(point.x) + sin(point.y));
+
+float sceneDistance(vec3 point) {
+  vec2 sphere = dSphere(point);
+  float plane = dPlane(point);
+  float d = min(sphere.x, plane);
+  return d;
+}
+
+float sceneMaterial(vec3 point) {
+  vec2 sphere = dSphere(point);
+  float plane = dPlane(point);
+  float d = min(sphere.x, plane);
+
+  if(d == sphere.x) {
+    return sphere.y;
+  }
+
+  return 0.0;
+}
+
+vec2 rayMarch(vec3 ro, vec3 rd) {
+  float dO = 0.0;
+  float glow = 0.0;
+  for(int i = 0; i < MAX_STEPS; i++) {
+    vec3 p = ro + rd * dO;
+
+    float dS = sceneDistance(p);
+    float noise = Noise31(p);
+    float id = sceneMaterial(p + Noise31(p) * 0.1);
+    // max(Noise31(p) - 0.5, 0.0)
+    // glow += smoothstep(0.3, 0.0, dS) * 0.1 * id;
+    glow += 0.05 * max(id - 0.7, 0.0);
+
+    dO += dS;
+
+    if (abs(dS) < SURF_DIST) {
+      break;
+    }
+
+    if (dO > MAX_DIST) {
+      break;
+    }
+  }
+
+  return vec2(dO, glow);
+}
+
+vec3 GetNormal(vec3 p) {
+  float d = sceneDistance(p);
+  vec2 e = vec2(0.001, 0.0);
+  vec3 n = d - vec3(
+    sceneDistance(p - e.xyy),
+    sceneDistance(p - e.yxy),
+    sceneDistance(p - e.yyx)
+  );
+
+  return normalize(n);
+}
+
+void main() {
+  const float mouseFactor = 0.0005;
+  vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
+	vec3 rayOrigin = vec3(0.0, 0.0, 1.0 - u_scrollValue * 3.0);
+  float mouseY1 = max(u_mouseY, -70.0);
+
+  vec2 rot = vec2(
+    mouseY1 * mouseFactor * PI * 2.0,
+    u_mouseX * mouseFactor * PI * 2.0
+  );
+
+  R(rayDirection.yz, -rot.x);
+  R(rayDirection.xz, rot.y);
+  R(rayOrigin.yz, -rot.x);
+  R(rayOrigin.xz, rot.y);
+
+  vec2 rm = rayMarch(rayOrigin, rayDirection);
+  float d = rm.x;
+  float glow = rm.y;
+
+  // TODO ::: add glow
+  vec3 col;
+  float dif = 0.0;
+  float dif1 = 0.0;
+  if(d < MAX_DIST) {
+    vec3 p = rayOrigin + rayDirection * d;
+    vec3 n = GetNormal(p);
+    vec3 r = reflect(rayDirection, n);
+
+    float mat = sceneMaterial(p);
+
+    dif = clamp(mat - 1.5, 0.0, 1.0) * 2.0;
+    // dif *= mat;
+
+    if (mat == 0.0) {
+      dif = max((0.2 - length(p) / 20.0), 0.0);
+
+      float shift = pbm_simplex_noise3(p * (20.0 + 5.0 * sin(u_time))) * 0.1;
+      vec3 reflectDirection = normalize(r * vec3(0.5, 1.0, 0.5)) +
+        vec3(shift);
+      vec3 reflectOrigin = p + reflectDirection * SURF_DIST  + 0.02;
+
+      vec2 rm2 = rayMarch(reflectOrigin, reflectDirection);
+      float d1 = rm2.x;
+
+      if (d1 < MAX_DIST) {
+        col.b = 1.0;
+
+        vec3 p1 = reflectOrigin + reflectDirection * d1;
+        vec3 n1 = GetNormal(p1);
+        float mat = sceneMaterial(p1);
+        dif += clamp(mat - 1.5, 0.0, 1.0) * 2.0;
+        dif = mix(dif, dif1, (1.0 - mat * 0.3));
+      }
+    } else {
+      // TODO ::: tweak shit shit
+      float fac = dot(n, normalize(vec3(0.0, 1.0, 0.0))) * 0.5 + 0.5;
+      dif *= (0.8 - fac*fac*fac);
+      dif += glow;
+    }
+  }
+
+  col = vec3(dif);
+  col=pow(col, vec3(0.5 + 2.0 * u_gamma));
+  FragColor = vec4(col, 1.0);
+}
