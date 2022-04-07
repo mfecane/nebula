@@ -13,6 +13,7 @@ uniform float u_scrollValue;
 $lib
 $distances
 $noise
+$simplex-noise
 
 #define PI  3.14159265358
 #define TAU 6.28318530718
@@ -24,14 +25,19 @@ $noise
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
 
 vec2 dPlane(vec3 point) {
-  float dist = point.y + 0.6;
+  float dist = point.y + 0.6 * (1.0 - 0.3 * cos(point.x * 2.0  + u_time) + 0.3 * sin(point.z * 2.0  + u_time));
   float id = 0.2 + 0.8 * Noise21(floor(point.xz * 1.0));
   return vec2(dist, id);
 }
 
 float dSphere(vec3 point) {
-  return length(point) - 0.7;
+  return length(point) - 0.7 * (1.0 - 0.3 * cos(point.x * 2.0  + u_time) + 0.3 * sin(point.z * 2.0  + u_time));
 }
+
+
+// split sphere by chunks, reflect in floor
+// use this irregular shpere
+// return length(point) - 0.7 * (cos(point.x) + sin(point.y));
 
 float sceneDistance(vec3 point) {
   float sphere = dSphere(point);
@@ -109,7 +115,7 @@ void main() {
     dif *= mat;
 
     if (mat > 0.0) {
-      vec3 reflectDirection = normalize(r);
+      vec3 reflectDirection = normalize(r) + vec3(pbm_simplex_noise3(p)) * 0.1;
       vec3 reflectOrigin = p + reflectDirection * SURF_DIST  + 0.02;
 
       float d1 = rayMarch(reflectOrigin, reflectDirection);
@@ -121,7 +127,7 @@ void main() {
         vec3 n1 = GetNormal(p1);
 
         dif1 = dot(n1, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
-        dif = mix(dif, dif1, (1.0 - mat));
+        dif = mix(dif, dif1, (1.0 - mat * 0.3));
       }
     }
   }
