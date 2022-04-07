@@ -1,7 +1,15 @@
 @import "css/config.scss";
 
 body {
+  font-family: Montserrat, sans-serif;
   color: $light;
+  background-color: $dark;
+}
+
+button {
+  font-family: Montserrat, sans-serif;
+  color: $light;
+  background: none;
 }
 
 #canvas-container {
@@ -16,12 +24,29 @@ body {
   bottom: 30px;
   right: 30px;
   width: 400px;
-  height: 200px;
+  height: 300px;
   background: rgba(36, 36, 36, 0.5);
   z-index: 1;
   padding: 10px;
-  display:  grid;
+  display: grid;
   grid-template-columns: 3fr 2fr;
   align-items: center;
   gap: 16px;
+}
+
+#fps {
+  grid-column: 1 / span 2;
+}
+
+::-webkit-scrollbar {
+  width: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background-color: rgba(0, 0, 0, 0.5);
 }

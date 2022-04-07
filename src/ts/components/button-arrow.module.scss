@@ -1,0 +1,59 @@
+@import "css/config.scss";
+
+.collapseButton {
+  background: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 22px;
+  border-radius: 26px;
+  height: 52px;
+  width: 52px;
+  padding: 0 20px;
+  background-color: #000;
+  transition: all 200ms ease-in-out;
+
+  .arrowIcon {
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    transition: transform 200ms ease-out;
+    background-color: $accent;
+    mask: url(assets/arrow2.svg);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    transform: translateX(-8px) rotate(180deg);
+  }
+
+  &.toggle {
+    width: auto;
+
+    .arrowIcon {
+      transform: rotate(0deg);
+    }
+
+    label {
+      opacity: 1;
+      cursor: pointer;
+      transition: opacity 200ms ease-out;
+    }
+  }
+
+  label {
+    white-space: nowrap;
+    color: $accent;
+    opacity: 0;
+  }
+
+  &:hover {
+    label {
+      color: $light;
+    }
+
+    .arrowIcon {
+      background-color: $light;
+    }
+  }
+}

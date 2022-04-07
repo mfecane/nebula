@@ -1,0 +1,67 @@
+@import "css/config.scss";
+
+.container {
+  padding: 22px 32px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 20px;
+  margin-bottom: 22px;
+  position: relative;
+}
+
+.controls {
+  display: grid;
+}
+
+.controlContainer {
+  min-height: 200px;
+  opacity: 1;
+}
+
+.backButton {
+  margin: 24px 0 32px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  i {
+    display: inline-block;
+    background: rgb(255, 255, 255);
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    mask: url(assets/arrow.svg);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    transition: transform 200ms ease-out;
+    transform: rotate(180deg);
+  }
+
+  label {
+    color: $light;
+    font-size: 20px;
+  }
+
+  &:hover {
+    cursor: pointer;
+
+    i {
+      background: $accent;
+    }
+
+    label {
+      cursor: pointer;
+      color: $accent;
+    }
+  }
+}

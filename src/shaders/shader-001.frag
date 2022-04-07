@@ -11,24 +11,20 @@ uniform float u_time;
 uniform float u_mouseX;
 uniform float u_mouseY;
 uniform float u_scrollValue;
-uniform sampler2D u_Sampler;
 
 uniform float u_control1;
 uniform float u_control2;
 uniform float u_control3;
 uniform float u_control4;
 uniform float u_control5;
-uniform float u_control6;
-uniform float u_control7;
-uniform float u_control8;
 
 #define ROTATION
 //#define MOUSE_CAMERA_CONTROL
 
 #define DITHERING
 #define BACKGROUND
-#define MAX_STEPS 200
-#define MAX_DIST 3.0
+#define MAX_STEPS 100
+#define MAX_DIST 100.0
 #define SURF_DIST 0.00001 // hit distance
 
 //#define TONEMAPPING
@@ -120,7 +116,7 @@ float SpiralNoise3D(vec3 p)
   float iter = 1.0;
   for (int i = 0; i < 5; i++)
   {
-    n += (sin(p.y * iter) + cos(p.x * iter)) / iter;
+    n += (sin(p.y * iter + u_control1 * 1.313) + cos(p.x * iter + u_control1)) / iter;
     p.xz += vec2(p.z, -p.x) * nudge;
     p.xz *= normalizer;
     iter *= 1.33733;
@@ -145,7 +141,7 @@ float NebulaNoise(vec3 p)
 }
 
 // combination of noises around (0.0, 30.0)
-float mapNebulaDensity(vec3 p)
+float map(vec3 p)
 {
   // NebulaNoise around (-30, 10)
   float NebNoise = abs(NebulaNoise(p / 0.5) * 0.5);
@@ -168,12 +164,12 @@ vec3 computeColor( float density, float radius )
 	return result;
 }
 
-bool RaySphereIntersect(vec3 org, vec3 dir, float radius, out float near, out float far)
+bool RaySphereIntersect(vec3 org, vec3 dir, out float near, out float far)
 {
   float b = dot(dir, org);
-  float c = dot(org, org) - radius;
+  float c = dot(org, org) - 8.;
   float delta = b * b - c;
-  if (delta < 0.0){
+  if(delta < 0.0){
     return false;
   }
   float deltasqrt = sqrt(delta);
@@ -210,19 +206,13 @@ float Noise31(vec3 p){
   return fract(p.x * p.y * p.z);
 }
 
-float mod289(float x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
+float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
 
-vec4 mod289(vec4 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
+vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
 
-vec4 perm(vec4 x) {
-  return mod289(((x * 34.0) + 1.0) * x);
-}
+vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
 
-float noise3d(vec3 p) {
+float noise3d(vec3 p){
     vec3 a = floor(p);
     vec3 d = p - a;
     d = d * d * (3.0 - 2.0 * d);
@@ -309,19 +299,18 @@ float sdSphere(vec3 p, float radius) {
 float GetDist(vec3 p) {
   // float box = sdBox(p - vec3(0.0, 1.0, 0.0), vec3(1.0));
 
-  // float angle = (1.0 - p.y) * (-PI + u_control5 * TAU);
-  // p = vec3(
-  //   p.x * sin(angle) + p.z * cos(angle),
-  //   p.y * u_control3,
-  //   p.x * - cos(angle) + p.z * sin(angle)
-  // );
+  float angle = (1.0 - p.y) * (-PI + u_control5 * TAU);
+  p = vec3(
+    p.x * sin(angle) + p.z * cos(angle),
+    p.y * u_control3,
+    p.x * - cos(angle) + p.z * sin(angle)
+  );
 
-  // float sphereDist = sdSphere(p, 0.5);
-  // float gyroid = sdGyroid(p, 1.0 + u_control2 * 8.0);
-  // float d = smin(sphereDist, gyroid * 0.9, -0.07);
-  // return d;
+  float sphereDist = sdSphere(p, 0.5 + u_control1 * 1.0);
+  float gyroid = sdGyroid(p, 1.0 + u_control2 * 8.0);
+  float d = smin(sphereDist, gyroid * 0.9, -0.07);
 
-  return length(p.xz) - 0.005;
+  return d;
 }
 
 vec3 GetRayDir(vec2 uv, vec3 p, vec3 l, float z) {
@@ -341,13 +330,12 @@ float rayMarch(vec3 ro, vec3 rd) {
     vec3 p = ro + rd * dO;
     float dS = GetDist(p);
     dO += dS;
-    if (abs(dS) < SURF_DIST) {
-      return 1.0;
-    }
-    if (dO > MAX_DIST) {
-      0.0;
+    if (dO > MAX_DIST || abs(dS) < SURF_DIST) {
+      break;
     }
   }
+
+  return dO;
 }
 
 vec3 GetNormal(vec3 p) {
@@ -362,234 +350,108 @@ vec3 GetNormal(vec3 p) {
   return normalize(n);
 }
 
-float densitySphere(vec3 p) {
-  if (length(p) < 1.0) {
-    return 1.0 - length(p);
-  }
-  return 0.0;
-}
-
-float densityFunction2(vec3 p) {
-  float noise = mapNebulaDensity(3.0 * p + vec3(1.0));
-
-  return clamp(map2(noise, -2.5 + 5.0 * u_control3, u_control4 * 8.0, 0.0, 1.0), 0.0, 1.0); // * densitySphere(p);
-  // return densitySphere(p);
-}
-
-float densityFunction(vec3 p) {
-  float noise = mapNebulaDensity(3.0 * p + vec3(1.0));
-
-  return clamp(map2(noise, u_control3 * -10.0, u_control4 * 10.0, 0.0, 1.0), 0.0, 1.0); // * densitySphere(p);
-  // return densitySphere(p);
-}
-
-float rayMarchLight(vec3 rayOrigin, vec3 rayDirection) {
-  float distanceStep = 0.03;
-
-  float maxDistance = 0.0;
-  float minDistance = 0.0;
-  float radius = 1.0;
-
-  bool isIntersecting = RaySphereIntersect(
-    rayOrigin, rayDirection, radius, minDistance, maxDistance
-  );
-
-  if(isIntersecting) {
-    float totalDensity = 1.0;
-    float rayLength = 0.0;
-    vec3 p = rayOrigin;
-    for(int i = 0; i < MAX_STEPS && rayLength < maxDistance; i++) {
-      float density = densityFunction(p) * distanceStep;
-      totalDensity *= (1.0 - density * 5.0 * u_control1); // absorption
-      if (totalDensity < 0.1) {
-        break;
-      }
-      rayLength += distanceStep;
-      p = rayOrigin + rayDirection * rayLength;
-    }
-
-    return totalDensity;
-  }
-
-  return 0.0;
-}
-
-float rayMarchDensity(vec3 rayOrigin, vec3 rayDirection) {
-  float distanceStep = 0.05;
-  vec3 lightPos = normalize(vec3(
-    0.5 * (cos(TAU) - sin(TAU)),
-    0.5,
-    0.5 * (sin(TAU) + cos(TAU))
-  ));
-
-  float maxDistance = 0.0;
-  float minDistance = 0.0;
-  float radius = 1.0;
-
-  bool isIntersecting = RaySphereIntersect(
-    rayOrigin, rayDirection, radius, minDistance, maxDistance
-  );
-
-  if(isIntersecting) {
-    float totalTranslucence = 1.0;
-    float color = 0.0;
-    float rayLength = minDistance;
-
-    vec3 p = rayOrigin;
-    for(int i = 0; i < MAX_STEPS && rayLength < maxDistance; i++) {
-
-      float density = densityFunction(p) * distanceStep;
-
-      if (density > 0.8) {
-        break;
-      }
-
-      float light = rayMarchLight(p, lightPos);
-
-      totalTranslucence *= (1.0 - density * 60.0 * u_control5);
-      color += density * (1.0 - totalTranslucence) * light;
-      rayLength += distanceStep;
-      p = rayOrigin + rayDirection * rayLength;
-    }
-
-    return color;
-  }
-
-  return 0.0;
-}
-
-
-vec4 debug3dNoise(vec2 uv) {
-  vec3 dummyPoint = vec3(uv.x, uv.y, 2.0 * u_control3) * 10.0;
-  float noise = mapNebulaDensity(dummyPoint);
-  noise = map2(noise, -2.0, 7.0, 0.1, 1.0);
-  return vec4(noise, noise, noise, 1.0);
-}
-
-float drawLine (vec2 p1, vec2 p2, vec2 uv, float a)
+void main()
 {
-    float r = 0.;
-    float one_px = 1.; //not really one px
+//   vec3 debugColor;
+// 	vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
+// 	vec3 rayOrigin = vec3(0.0, 0.0, -u_scrollValue);
 
-    // get dist between points
-    float d = distance(p1, p2);
+const float mouseFactor = 0.002;
+//   R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
+//   R(rayDirection.xz, u_mouseX * mouseFactor * PI * 2.0);
+//   R(rayOrigin.yz, -u_mouseY * mouseFactor * PI * 2.0);
+//   R(rayOrigin.xz, u_mouseX * mouseFactor * PI * 2.0);
 
-    // get dist between current pixel and p1
-    float duv = distance(p1, uv);
+//   // DITHERING
+// 	vec2 seed = fract(uv * 2.0) / 2.0 + sin(u_time / 2.0);
 
-    //if point is on line, according to dist, it should match current uv
-    r = 1.-floor(1.-(a*one_px)+distance (mix(p1, p2, clamp(duv/d, 0., 1.)),  uv));
+// 	// w: weighting factor
+// 	float localDensity = 0.0, totalDensity = 0.0, w = 0.0;
 
-    return r;
-}
+// 	// t: length of the ray
+// 	// d: distance function
+// 	float d = 1.0, t = 0.0;
 
-vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
-  // DITHERING
-	vec2 seed = fract(uv * 2.0) / 2.0 + sin(u_time / 2.0);
+//   const float h = 0.1;
 
-	// w: weighting factor
-	float localDensity = 0.0, totalDensity = 0.0, w = 0.0;
+// 	vec4 sum = vec4(0.0);
 
-	// t: length of the ray
-	// d: distance function
-	float dist = 1.0;
-  float rayLength = 0.0;
+//   float min_dist = 0.0, max_dist = 0.0;
 
-  float hitDist = 0.3 * u_control1; // tweak this smaller, gives volume
 
-	vec4 sum = vec4(0.0);
+//   // march ray to the sphere
+//   if (RaySphereIntersect(rayOrigin, rayDirection, min_dist, max_dist))
+//   {
+//     // if t < min_dist return 0
+//     // if t >= min_dist return 1
+// 	  t = min_dist * step(t, min_dist);
 
-  float min_dist = 0.0;
-  float max_dist = 0.0;
+//     // raymarch loop
+//     for (int i = 0; i < 56; i++)
+//     {
+//       vec3 pos = rayOrigin + t * rayDirection;
 
-  // march ray to the sphere
-  if (RaySphereIntersect(rayOrigin, rayDirection, 2.5, min_dist, max_dist))
-  {
-    // if t < min_dist return 0
-    // if t >= min_dist return 1
-	  rayLength = min_dist * step(rayLength, min_dist);
+//       // t > 10.0 - clipping
+//       if (totalDensity > 0.9 || d < 0.1 * t || t > 10.0 || sum.a > 0.99 || t > max_dist) {
+//         break;
+//       }
 
-    // raymarch loop
-    for (int i = 0; i < 56; i++)
-    {
-      vec3 pos = rayOrigin + rayLength * rayDirection;
+//       // evaluate distance function
+//       float d = map(pos);
 
-      // t > 10.0 - clipping
-      // d < 0.1 * rayLength - was mistake gets cutoff effect
-      if (totalDensity > 0.9 || rayLength > 10.0 || sum.a > 0.99 || rayLength > max_dist) {
-        break;
-      }
+//       // change this string to control density
+//       d = max(d, 0.07);
 
-      // evaluate distance function
-      dist = densityFunction2(pos);
+//       // point light calculations
+//       vec3 ldst = vec3(0.0) - pos;
+//       float lDist = max(length(ldst), 0.001);
 
-      // change this string to control density
-      // d = max(d, 0.5 * u_control1);
+//       // star in center
+//       vec3 lightColor = vec3(1.0, 0.5, 0.25);
+//       // star itself and bloom around the light
+//       sum.rgb += (lightColor / (lDist * lDist) / 30.0);
 
-      // point light calculations
-      vec3 ldst = vec3(0.0) - pos;
-      float lDist = max(length(ldst), 0.001);
+//       if (d < h)
+//       {
 
-      // star in center
-      vec3 lightColor = vec3(1.0, 0.6 + pos.z * 0.3, 0.4 + pos.x * 0.2);
-      // star itself and bloom around the light
-      sum.rgb += (lightColor / (pow(lDist, 1.5)) / (80.0 * u_control5));
+//         // compute local density
+//         localDensity = h - d;
 
-      if (dist < hitDist)
-      {
+//         // compute weighting factor
+//         w = (1.0 - totalDensity) * localDensity;
 
-        // compute local density
-        localDensity = hitDist - dist;
+//         // accumulate density
+//         totalDensity += w + 1.0/200.0;
 
-        // compute weighting factor
-        w = (1.0 - totalDensity) * localDensity;
+//         vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
 
-        // accumulate density
-        totalDensity += w + 1.0 / (100.0); // minor effect
+//         // uniform scale density
+//         col.a *= 0.185;
+//         // colour by alpha
+//         col.rgb *= col.a;
+//         // alpha blend in contribution
+//         sum = sum + col*(1.0 - sum.a);
+//       }
 
-        vec4 col = vec4(computeColor(totalDensity, lDist), totalDensity);
+//       // still add density, even if not hit
+//       totalDensity += 1.0/70.0;
 
-        // uniform scale density
-        col.a *= 0.01; // this shit is lower is better
-        // colour by alpha
-        col.rgb *= col.a;
-        // alpha blend in contribution
-        sum = sum + col * (1.0 - sum.a);
-      }
+//       // enforce minimum stepsize
+//       d = max(d, 0.04);
 
-      // still add density, even if not hit
-      // 40.0 is ok
-      // this is like fog
-      totalDensity += 1.0/(40.0);
+//       // DITHERING
+//       d = abs(d) * (0.8 + 0.2 * rand(seed * vec2(i)));
 
-      // enforce minimum stepsize
-      // minor effect
-      dist = max(dist, 0.1);
+//       // trying to optimize step size near the camera and near the light source
+//       t += max(d * 0.1 * max(min(length(ldst), length(rayOrigin)), 1.0), 0.02);
+//     }
+//     // simple scattering
+// 	  sum *= 1.0 / exp(localDensity * 0.2) * 0.6;
+//    	sum = clamp(sum, 0.0, 1.0);
+//     sum.xyz = sum.xyz * sum.xyz * (3.0 - 2.0 * sum.xyz);
+// 	}
 
-      // DITHERING
-      dist = abs(dist) * (0.8 + 0.2 * rand(seed * vec2(i)));
-
-      // trying to optimize step size near the camera and near the light source
-      rayLength +=
-        max(
-          dist * 0.3 *
-            max(
-              min(
-                length(ldst),
-                length(rayOrigin)
-              ),
-              1.0
-            ),
-          0.02
-        );
-    }
-    // simple scattering
-	  sum *= 1.0 / exp(localDensity * 0.2) * 0.6;
-   	sum = clamp(sum, 0.0, 1.0);
-    // this make s it burn
-    sum.a = totalDensity;
-    sum.xyz = sum.xyz * sum.xyz * (3.0 - 2.0 * sum.xyz);
-	}
+//   debugColor = sum.xyz;
 
 //   // BACKGROUND
 //   // if (totalDensity < 0.8)
@@ -612,51 +474,49 @@ vec3 nebulaMarch(vec3 rayOrigin, vec3 rayDirection) {
 //   // vec3 polar4 = cartesianToPolar(rayDirection.xzy);
 //   // polar4.x = u_scrollValue;
 //   // debugColor = vec3(
-//   //   map2(mapNebulaDensity(polar4) * 4.0, 0.0, 30.0, 0.0, 1.0)
+//   //   map2(map(polar4) * 4.0, 0.0, 30.0, 0.0, 1.0)
 //   // );
 
-  // // MY STARS
-  vec3 polar1 = cartesianToPolar(rayDirection.xzy);
+//   // // MY STARS
+//   vec3 polar1 = cartesianToPolar(rayDirection.xzy);
+//   vec3 polar2 = cartesianToPolar(rayDirection.xyz);
+//   R(rayDirection.yz, PI / 2.0);
+//   vec3 polar3 = cartesianToPolar(rayDirection.xyz);
+//   // TODO ::: try optimize
+//   debugColor += stars(polarNormalize(polar1).yz, 5.43141);
+//   debugColor += stars(polarNormalize(polar2).yz, 6.4324);
+//   debugColor += stars(polarNormalize(polar3).yz, 7.11231);
+  vec3 col = vec3(0.0);
 
-  vec2 starzProj = vec2(
-    (polar1.z) / TAU + 0.5,
-    (polar1.y) / TAU + 0.5
-  );
-  vec4 strz = texture(u_Sampler, starzProj, 0.0);
+  // art of code' ro and rd
+  // vec3 rayOrigin = vec3(0.0, 2.0, -2.0);
+  // rayOrigin.yz *= Rot(-u_mouseY * mouseFactor * PI + 1.0);
+  // rayOrigin.xz *= Rot(-u_mouseX * mouseFactor * TAU);
+  // vec3 rayDirection = GetRayDir(uv, rayOrigin, vec3(0.0, 1.0, 0.0), 1.0);
 
-  // TODO ::: try optimize
-  // float strz = stars(polarNormalize(polar1).yz, 5.43141);
-  // strz += stars(polarNormalize(polar2).yz, 6.4324);
-  // strz += stars(polarNormalize(polar3).yz, 7.11231);
-
-
-  return mix(sum.xyz, strz.rgb, 1.0 - sum.a);
-  // return vec3(strz.rgb);
-}
-
-void main()
-{
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, 0.0, -(0.5 + u_scrollValue * 1.0));
-
-  const float mouseFactor = 0.002;
+	vec3 rayOrigin = vec3(0.0, 0.0, 0.5 - u_scrollValue * 5.0);
   R(rayDirection.yz, -u_mouseY * mouseFactor * PI * 2.0);
   R(rayDirection.xz, u_mouseX * mouseFactor * PI * 2.0);
   R(rayOrigin.yz, -u_mouseY * mouseFactor * PI * 2.0);
   R(rayOrigin.xz, u_mouseX * mouseFactor * PI * 2.0);
 
-  // float denisityIntegral = rayMarchDensity(rayOrigin, rayDirection);
-  // vec3 col = vec3(denisityIntegral);
+  float d = rayMarch(rayOrigin, rayDirection);
 
-  // draw line
-  // col += rayMarch(rayOrigin, rayDirection);
+  if(d<MAX_DIST) {
+      vec3 p = rayOrigin + rayDirection * d;
+      vec3 n = GetNormal(p);
+      vec3 r = reflect(rayDirection, n);
 
-  vec3 col = nebulaMarch(rayOrigin, rayDirection);
+      float dif = dot(n, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
+      col = vec3(dif);
+  }
 
-  // TESTS
+  d /= 6.0;
 
-  // 1.0 test noise
-  // FragColor = debug3dNoise(uv);
+  // debug noise
+
+  // FragColor = vec4(vec3(noise3d(vec3(uv.x, uv.y, 1.0) * 20.0)), 1.0);
 
   FragColor = vec4(col, 1.0);
 }

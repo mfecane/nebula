@@ -1,7 +1,7 @@
 import Shader from 'ts/webgl/shader'
 
 import nebulaVertexShaderSource from 'shaders/nebula.vert'
-import nebulaFragmentShaderSource from 'shaders/nebula.frag'
+import nebulaFragmentShaderSource from 'shaders/fractal.frag'
 import { init as initControls, getValue as getControlValue } from 'ts/components/controls'
 
 import {
@@ -50,7 +50,15 @@ const drawImage = function (): void {
   nebulaShader.setUniform('u_mouseX', mouseX)
   nebulaShader.setUniform('u_mouseY', mouseY)
   nebulaShader.setUniform('u_scrollValue', scrollValue)
-  nebulaShader.setUniform('u_control1', getControlValue(1) / 10)
+  nebulaShader.setUniform('u_control1', getControlValue(1) / 100)
+  nebulaShader.setUniform('u_control2', getControlValue(2) / 100)
+  nebulaShader.setUniform('u_control3', getControlValue(3) / 100)
+  nebulaShader.setUniform('u_control4', getControlValue(4) / 100)
+  nebulaShader.setUniform('u_control5', getControlValue(5) / 100)
+  nebulaShader.setUniform('u_control6', getControlValue(6) / 100)
+  nebulaShader.setUniform('u_control7', getControlValue(7) / 100)
+  nebulaShader.setUniform('u_control8', getControlValue(8) / 100)
+
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
   gl.clear(gl.COLOR_BUFFER_BIT)
   gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0)
@@ -59,6 +67,7 @@ const drawImage = function (): void {
 const setCanvasSize = function (): void {
   width = rootElement.clientWidth
   height = rootElement.clientHeight
+
   canvas.width = width
   canvas.height = height
   canvas.style.width = `${width}px`
@@ -128,6 +137,13 @@ export const init = function (root) {
   nebulaShader.addUniform('u_mouseY', '1f')
   nebulaShader.addUniform('u_scrollValue', '1f')
   nebulaShader.addUniform('u_control1', '1f')
+  nebulaShader.addUniform('u_control2', '1f')
+  nebulaShader.addUniform('u_control3', '1f')
+  nebulaShader.addUniform('u_control4', '1f')
+  nebulaShader.addUniform('u_control5', '1f')
+  nebulaShader.addUniform('u_control6', '1f')
+  nebulaShader.addUniform('u_control7', '1f')
+  nebulaShader.addUniform('u_control8', '1f')
 
   // Create and bind the framebuffer
   // frameBuffer = gl.createFramebuffer()
