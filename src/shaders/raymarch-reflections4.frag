@@ -92,20 +92,75 @@ float sceneMaterial(vec3 p) {
   return 1.0;
 }
 
+bool RaySphereIntersect(vec3 org, vec3 dir, float radius, out float near, out float far)
+{
+  float b = dot(dir, org);
+  float c = dot(org, org) - radius;
+  float delta = b * b - c;
+  if (delta < 0.0){
+    return false;
+  }
+  float deltasqrt = sqrt(delta);
+  near = -b - deltasqrt;
+  far = -b + deltasqrt;
+  return far > 0.0;
+}
+
+
+float planeDistance(vec3 p) {
+  return p.y + 0.8;
+}
+
+float densityFunction(vec3 p) {
+  float s = sdSphere2(p, 1.0, 0.03);
+  float g = sdGyroid(p, 1.0 + 4.0, 0.03);
+
+  float d = smin(s, g, -0.2);
+
+  return d;
+}
+
 vec2 rayMarch(vec3 ro, vec3 rd) {
-  float dO = 0.0;
   float col = 0.0;
+  float min_dist;
+  float max_dist;
+
+  RaySphereIntersect(ro, rd, 3.0, min_dist, max_dist);
+  float dO = max(min_dist, 0.0);
+
+
   for(int i = 0; i < MAX_STEPS; i++) {
     vec3 p = ro + rd * dO;
-    float dS = sceneDistance(p);
+    float planeDistance = planeDistance(p);
+    float dS = densityFunction(p);
     float mat = sceneMaterial(p);
 
-    col += max(0.5 - dS, 0.0) * 0.05 * mat;
-    dO += min(dS, 0.1);
-    if (abs(dS) < SURF_DIST || dO > MAX_DIST) {
+    // col += 0.2;
+    col += max(0.3 - dS, 0.0 ) * 0.05;
+
+    // prevent overstepping
+    float step = max(0.05, dS / 0.5);
+    step = min(step, planeDistance);
+
+    dO += min(0.05, planeDistance);
+
+    if (dO > max_dist || abs(planeDistance) < SURF_DIST) {
       break;
     }
+    // check this
+    // float planeDistance = planeDistance(p);
+    // if (planeDistance < 0.0) {
+    //   dO = planeDistance;
+    //   col = 1.0;
+    //   break;
+    // }
   }
+
+  // float planeDistance = planeDistance(ro + rd * dO);
+  // if (planeDistance < 0.0) {
+  //   col = 1.0;
+  // }
+
   return vec2(dO, col);
 }
 
@@ -146,7 +201,7 @@ void main() {
 
   if (d < MAX_DIST) {
     vec3 p = rayOrigin + rayDirection * d;
-    vec3 n = GetNormal(p);
+    vec3 n = vec3(0.0, 1.0, 0.0);
     float mat = sceneMaterial(p);
     vec3 r = reflect(rayDirection, n);
 
@@ -154,16 +209,18 @@ void main() {
     // col = vec3(dif) * mat;
 
     if (mat == 0.0) {
+      // col = vec3(1.0, 0.0, 0.0);
       vec3 reflectDirection = normalize(r);
-      vec3 reflectOrigin = p + reflectDirection * SURF_DIST  + 0.02;
+      vec3 reflectOrigin = p + reflectDirection * (SURF_DIST  + 0.05);
+
       res = rayMarch(reflectOrigin, reflectDirection);
       float d1 = res.x;
       float c1 = res.y;
 
       if (d1 < MAX_DIST) {
         vec3 p1 = reflectOrigin + reflectDirection * d1;
-        vec3 n1 = GetNormal(p1);
-        vec3 r1 = reflect(reflectDirection, n1);
+        // vec3 n1 = GetNormal(p1);
+        // vec3 r1 = reflect(reflectDirection, n1);
 
         // float dif1 = dot(n1, normalize(vec3(0.0, 1.0, 0.0))) * 0.5 + 0.5;
 

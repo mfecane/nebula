@@ -5,6 +5,8 @@
 - projet idea shader library
 - lost some project ideas
 - check orbit controls
+- toDataURL
+- add light in center
 
 ## STUFF
 
