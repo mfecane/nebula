@@ -16,6 +16,7 @@ uniform float u_control1;
 uniform float u_control2;
 
 uniform sampler2D u_Sampler;
+uniform samplerCube u_Sampler2;
 
 $lib
 $distances
@@ -59,14 +60,15 @@ float dSphere(vec3 point, float radius) {
 }
 
 float sceneDistance(vec3 point) {
-  float g1 = sdGyroid2(point * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
-  float g2 = sdGyroid3(point * 8.0, 0.6324, 0.4);
-  float sph = dSphere(point, 1.2);
+  vec3 p1 = point + vec3(0.0, 0.7 * (0.5 + 0.5 * sin(u_time / 10.0)), 0.0);
+  float g1 = sdGyroid2(p1 * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
+  float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.4);
+  float sph = dSphere(p1, 1.2);
   float pl = dPlane(point);
 
   float d = smin(g1, g2, -0.2) / 10.0;
   d = smin(d, sph, -0.1);
-  d = smin(d, pl, 0.05);
+  d = smin(d, pl, 0.08);
 
   return d;
 }
@@ -79,7 +81,7 @@ float sceneMaterial(vec3 point) {
 
   float d = max(g1, g2) / 10.0;
   d = max(d, sph);
-  d = min(d, pl);
+  d = min(d - 0.03, pl);
 
   if(d == pl) {
     return 0.0;
@@ -141,13 +143,14 @@ void main() {  const float mouseFactor = 0.0005;
     float mat = sceneMaterial(p);
     dif = dot(n, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
 
+    vec4 samp = texture(u_Sampler2, r);
+    col = samp.rgb;
+
     if (mat == 0.0) {
+      col *= 0.5;
       dif *= smoothstep(3.0, 0.0, length(p.xz));
-      col = vec3(1.0);
     } else {
-      vec4 samp = texture(u_Sampler, r.xz, 0.0);
-      col = samp.rgb;
-      dif *= 1.5;
+      dif *= 2.0;
     }
 
     vec3 reflectDirection = normalize(r) + vec3(pbm_simplex_noise3(p)) * 0.1;
@@ -163,15 +166,18 @@ void main() {  const float mouseFactor = 0.0005;
 
       col = mix(
         samp.rgb,
-        mix(vec3(1.0), vec3(0.0,-1.0,0.0), smoothstep(-1.0, 0.0, dot(n1, -rayDirection))),
+        mix(vec3(0.0 , -1.0, 0.0), samp.rgb, smoothstep(-1.0, 1.0, dot(n1, vec3(0.0,-1.0, 0.0)))),
         u_control2
       );
 
       dif1 = dot(n1, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
       dif = mix(dif, dif1, (1.0 - mat * 0.3));
     }
+    col *= vec3(dif);
+  } else {
+    vec4 samp = texture(u_Sampler2, rayDirection);
+    col = samp.rgb * 0.5;
   }
 
-  col *= vec3(dif);
   FragColor = vec4(col, 1.0);
 }

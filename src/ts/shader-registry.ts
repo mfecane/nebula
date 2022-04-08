@@ -168,6 +168,13 @@ addShader({
 import sh009 from 'shaders/raymarch-reflections3.frag'
 import img001 from 'assets/bg.jpg'
 
+import posX01 from 'assets/Yokohama3/posx.jpg'
+import negX01 from 'assets/Yokohama3/negx.jpg'
+import posY01 from 'assets/Yokohama3/posy.jpg'
+import negY01 from 'assets/Yokohama3/negy.jpg'
+import posZ01 from 'assets/Yokohama3/posz.jpg'
+import negZ01 from 'assets/Yokohama3/negz.jpg'
+
 addShader({
   name: 'Shiny gyroid',
   description: '',
@@ -180,4 +187,14 @@ addShader({
     { id: 'control2', label: 'Fresnel', default: 0.5 },
   ],
   texture: { src: img001 },
+  textureCube: {
+    src: {
+      posX: posX01,
+      negX: negX01,
+      posY: posY01,
+      negY: negY01,
+      posZ: posZ01,
+      negZ: negZ01,
+    },
+  },
 })
