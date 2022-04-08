@@ -11,7 +11,11 @@ uniform float u_mouseY;
 uniform float u_scrollValue;
 uniform float u_gamma;
 uniform float u_gyrdens1;
+
 uniform float u_control1;
+uniform float u_control2;
+
+uniform sampler2D u_Sampler;
 
 $lib
 $distances
@@ -114,6 +118,7 @@ void main() {  const float mouseFactor = 0.0005;
 	vec3 rayOrigin = vec3(0.0, 0.0, 1.0 - u_scrollValue * 3.0);
   float mouseY1 = max(u_mouseY, -70.0);
 
+
   vec2 rot = vec2(
     mouseY1 * mouseFactor * PI * 2.0,
     u_mouseX * mouseFactor * PI * 2.0
@@ -133,12 +138,16 @@ void main() {  const float mouseFactor = 0.0005;
     vec3 p = rayOrigin + rayDirection * d;
     vec3 n = GetNormal(p);
     vec3 r = reflect(rayDirection, n);
-
     float mat = sceneMaterial(p);
     dif = dot(n, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
 
     if (mat == 0.0) {
       dif *= smoothstep(3.0, 0.0, length(p.xz));
+      col = vec3(1.0);
+    } else {
+      vec4 samp = texture(u_Sampler, r.xz, 0.0);
+      col = samp.rgb;
+      dif *= 1.5;
     }
 
     vec3 reflectDirection = normalize(r) + vec3(pbm_simplex_noise3(p)) * 0.1;
@@ -149,12 +158,20 @@ void main() {  const float mouseFactor = 0.0005;
     if (d1 < MAX_DIST) {
       vec3 p1 = reflectOrigin + reflectDirection * d1;
       vec3 n1 = GetNormal(p1);
+      vec3 r1 = reflect(reflectDirection, n1);
+      vec4 samp = texture(u_Sampler, r1.xz, 0.0);
 
-      dif1 = dot(n1, normalize(vec3(1.0, 2.0, 3.0))) * 0.3 + 0.2;
+      col = mix(
+        samp.rgb,
+        mix(vec3(1.0), vec3(0.0,-1.0,0.0), smoothstep(-1.0, 0.0, dot(n1, -rayDirection))),
+        u_control2
+      );
+
+      dif1 = dot(n1, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
       dif = mix(dif, dif1, (1.0 - mat * 0.3));
     }
   }
 
-  col = vec3(dif);
+  col *= vec3(dif);
   FragColor = vec4(col, 1.0);
 }

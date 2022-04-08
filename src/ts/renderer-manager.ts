@@ -1,6 +1,7 @@
 import { getShaderList } from 'ts/shader-registry'
 import Renderer from 'ts/renderers/renderer-base'
 import RendererBG from 'ts/renderers/renderer-bg'
+import RendererTexture from 'ts/renderers/renderer-tex'
 
 let renderer: Renderer = null
 let canvasContainer: HTMLDivElement
@@ -17,6 +18,8 @@ const createRenderer = function (options) {
       return Renderer
     case 'bg':
       return RendererBG
+    case 'tex':
+      return RendererTexture
     default:
       return Renderer
   }
@@ -51,6 +54,7 @@ export const setRenderer = function (id: number): void {
       renderer.animate()
     } catch (e) {
       errorCallback(e)
+      console.error(e)
     }
   }
 }

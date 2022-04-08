@@ -11,6 +11,9 @@ interface rendrerOptions {
   vertShaderSrc: string
   fragShaderSrc: string
   parameters: []
+  texture: {
+    src: string
+  } | null
 }
 
 export default class Renderer {
@@ -65,6 +68,10 @@ export default class Renderer {
     this.mainShader.useProgram()
     this.mainShader.setPositions('aPos')
 
+    this.addUniforms()
+  }
+
+  addUniforms(): void {
     this.mainShader.addUniform('u_MVP', '4fv')
     this.mainShader.addUniform('u_time', '1f')
     this.mainShader.addUniform('u_mouseX', '1f')
@@ -125,10 +132,18 @@ export default class Renderer {
     this.proj = this.calculateMVP(this.width, this.height)
 
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
-    this.mainShader.useProgram()
-    this.mainShader.setUniform('u_MVP', this.proj)
+    this.setUniforms()
+
+    this.gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT)
+    this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0)
+  }
+
+  setUniforms(): void {
     const [mouseX, mouseY, scrollValue] = getMouseControl()
     this.time = (Date.now() - this.startTime) / 1000
+
+    this.mainShader.setUniform('u_MVP', this.proj)
     this.mainShader.setUniform('u_time', this.time)
     this.mainShader.setUniform('u_mouseX', mouseX)
     this.mainShader.setUniform('u_mouseY', mouseY)
@@ -136,10 +151,6 @@ export default class Renderer {
     this.mainShader.setUniform('u_quality', 1.0)
 
     this.setUniformParameters()
-
-    this.gl.clearColor(0.0, 0.0, 0.0, 1.0)
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT)
-    this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0)
   }
 
   setUniformParameters(): void {

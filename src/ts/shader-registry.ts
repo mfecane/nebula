@@ -166,14 +166,18 @@ addShader({
 })
 
 import sh009 from 'shaders/raymarch-reflections3.frag'
+import img001 from 'assets/bg.jpg'
 
 addShader({
   name: 'Shiny gyroid',
   description: '',
   vertexSource: squareVert,
   fragmentSource: sh009,
+  type: 'tex',
   parameters: [
     { id: 'gyrdens1', label: 'Gyroid density', default: 0.5 },
     { id: 'control1', label: 'Control1', default: 0.5 },
+    { id: 'control2', label: 'Fresnel', default: 0.5 },
   ],
+  texture: { src: img001 },
 })
