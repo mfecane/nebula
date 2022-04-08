@@ -50,7 +50,12 @@ float hash21_2(vec2 p){
 
 float dPlane(vec3 point) {
   float dist = point.y + 0.8;
-  return dist * cos(length(point.xz) / (100.0 * 0.08));
+  return dist;
+}
+
+float dBigSphere(vec3 point, float radius) {
+  float dist = length(point + vec3(0.0, radius - 0.8, 0.0)) - radius;
+  return dist;
 }
 
 float dSphere(vec3 point, float radius) {
@@ -61,29 +66,34 @@ float dSphere(vec3 point, float radius) {
 
 float sceneDistance(vec3 point) {
   vec3 p1 = point + vec3(0.0, 0.7 * (0.5 + 0.5 * sin(u_time / 10.0)), 0.0);
+
   float g1 = sdGyroid2(p1 * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
   float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.4);
   float sph = dSphere(p1, 1.2);
-  float pl = dPlane(point);
+  // float pl = dPlane(point);
+  float sph2 = dBigSphere(point, 5.0);
 
   float d = smin(g1, g2, -0.2) / 10.0;
   d = smin(d, sph, -0.1);
-  d = smin(d, pl, 0.08);
+  d = smin(d, sph2, 0.08);
 
   return d;
 }
 
 float sceneMaterial(vec3 point) {
-  float g1 = sdGyroid2(point * 7.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
-  float g2 = sdGyroid3(point * 7.0, 0.6324, 0.4);
-  float sph = dSphere(point, 1.2);
-  float pl = dPlane(point);
+  vec3 p1 = point + vec3(0.0, 0.7 * (0.5 + 0.5 * sin(u_time / 10.0)), 0.0);
+
+  float g1 = sdGyroid2(p1 * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
+  float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.4);
+  float sph = dSphere(p1, 1.2);
+  // float pl = dPlane(point);
+  float sph2 = dBigSphere(point, 1.0);
 
   float d = max(g1, g2) / 10.0;
   d = max(d, sph);
-  d = min(d - 0.03, pl);
+  d = min(d - 0.03, sph2);
 
-  if(d == pl) {
+  if(d == sph2) {
     return 0.0;
   }
 
@@ -117,7 +127,7 @@ vec3 GetNormal(vec3 p) {
 
 void main() {  const float mouseFactor = 0.0005;
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, 0.0, 1.0 - u_scrollValue * 3.0);
+	vec3 rayOrigin = vec3(0.0, 0.0, 1.0 - u_scrollValue * 20.0);
   float mouseY1 = max(u_mouseY, -70.0);
 
 
@@ -136,6 +146,10 @@ void main() {  const float mouseFactor = 0.0005;
   vec3 col;
   float dif;
   float dif1;
+
+  vec4 samp = texture(u_Sampler2, rayDirection);
+  col = samp.rgb * 0.5;
+
   if (d < MAX_DIST) {
     vec3 p = rayOrigin + rayDirection * d;
     vec3 n = GetNormal(p);
@@ -174,9 +188,6 @@ void main() {  const float mouseFactor = 0.0005;
       dif = mix(dif, dif1, (1.0 - mat * 0.3));
     }
     col *= vec3(dif);
-  } else {
-    vec4 samp = texture(u_Sampler2, rayDirection);
-    col = samp.rgb * 0.5;
   }
 
   FragColor = vec4(col, 1.0);
