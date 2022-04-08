@@ -50,15 +50,14 @@ float dPlane(vec3 point) {
 
 float dSphere(vec3 point, float radius) {
   // point -= vec3(0.0, 0.5, 0.0);
-  float dist = length(point) -
-    (1.0 + cos(point.x * 4.0) + sin(point.y * 4.0));
-  return dist * 0.3;
+  float dist = length(point) - radius;
+  return dist;
 }
 
 float sceneDistance(vec3 point) {
   float g1 = sdGyroid2(point * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
   float g2 = sdGyroid3(point * 8.0, 0.6324, 0.4);
-  float sph = dSphere(point, 0.7);
+  float sph = dSphere(point, 1.2);
   float pl = dPlane(point);
 
   float d = smin(g1, g2, -0.2) / 10.0;
@@ -71,7 +70,7 @@ float sceneDistance(vec3 point) {
 float sceneMaterial(vec3 point) {
   float g1 = sdGyroid2(point * 7.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
   float g2 = sdGyroid3(point * 7.0, 0.6324, 0.4);
-  float sph = dSphere(point, 0.7);
+  float sph = dSphere(point, 1.2);
   float pl = dPlane(point);
 
   float d = max(g1, g2) / 10.0;
