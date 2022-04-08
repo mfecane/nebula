@@ -164,3 +164,13 @@ addShader({
   fragmentSource: sh008,
   parameters: [{ id: 'gamma', label: 'Gamma', default: 0.5 }],
 })
+
+import sh009 from 'shaders/raymarch-reflections3.frag'
+
+addShader({
+  name: 'Raymarch with reflections 2',
+  description: '',
+  vertexSource: squareVert,
+  fragmentSource: sh009,
+  parameters: [{ id: 'gyrdens1', label: 'Gyroid density', default: 0.5 }],
+})
