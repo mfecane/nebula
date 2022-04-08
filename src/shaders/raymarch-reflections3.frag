@@ -11,6 +11,7 @@ uniform float u_mouseY;
 uniform float u_scrollValue;
 uniform float u_gamma;
 uniform float u_gyrdens1;
+uniform float u_control1;
 
 $lib
 $distances
@@ -21,9 +22,9 @@ $col
 #define PI  3.14159265358
 #define TAU 6.28318530718
 
-#define MAX_STEPS 200
-#define MAX_DIST 30.0
-#define SURF_DIST 0.005 // hit distance
+#define MAX_STEPS 128
+#define MAX_DIST 15.0
+#define SURF_DIST 0.0005 // hit distance
 
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
 
@@ -47,54 +48,37 @@ float dPlane(vec3 point) {
   return dist;
 }
 
-vec2 dSphere(vec3 point) {
-  float angle = 0.0;
-	if (point.z != 0.0) {
-    angle = clamp(atan(point.x, point.z), -PI, PI);
-  }
-	else if (point.x > 0.0) {
-		angle = PI * 0.5;
-	}
-	else {
-		angle = -PI * 0.5;
-	}
-
-  vec2 param = vec2(
-    point.y * 4.0,
-    angle
-  ) * 4.0;
-
-  float id = 1.0 + hash21_2(floor(param));
-
-  float dist = length(point) - 0.7 * (cos(point.x) + sin(point.y));
-
-  return vec2(dist, id);
+float dSphere(vec3 point, float radius) {
+  // point -= vec3(0.0, 0.5, 0.0);
+  float dist = length(point) -
+    (1.0 + cos(point.x * 4.0) + sin(point.y * 4.0));
+  return dist * 0.3;
 }
 
 float sceneDistance(vec3 point) {
-  float g1 = sdGyroid2(point * 8.0, 0.5 + 1.0 * u_gyrdens1, 0.5);
-  float g2 = sdGyroid3(point * 8.0, 0.5, 0.5);
-  float sph = sdSphere(point, 1.0);
+  float g1 = sdGyroid2(point * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
+  float g2 = sdGyroid3(point * 8.0, 0.6324, 0.4);
+  float sph = dSphere(point, 0.7);
   float pl = dPlane(point);
 
-  float d = smin(g1, g2, -0.1) / 8.0;
+  float d = smin(g1, g2, -0.2) / 10.0;
   d = smin(d, sph, -0.1);
-  d = smin(d, pl, 0.1);
+  d = smin(d, pl, 0.05);
 
   return d;
 }
 
 float sceneMaterial(vec3 point) {
-  float g1 = sdGyroid2(point * 8.0, 0.5 + 1.0 * u_gyrdens1, 0.5);
-  float g2 = sdGyroid3(point * 8.0, 0.5, 0.5);
-  float sph = sdSphere(point, 1.0);
+  float g1 = sdGyroid2(point * 7.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
+  float g2 = sdGyroid3(point * 7.0, 0.6324, 0.4);
+  float sph = dSphere(point, 0.7);
   float pl = dPlane(point);
 
-  float d = max(g1, g2) / 8.0;
+  float d = max(g1, g2) / 10.0;
   d = max(d, sph);
   d = min(d, pl);
 
-  if(d == sph) {
+  if(d == pl) {
     return 0.0;
   }
 
@@ -146,7 +130,7 @@ void main() {  const float mouseFactor = 0.0005;
   vec3 col;
   float dif;
   float dif1;
-  if(d < MAX_DIST) {
+  if (d < MAX_DIST) {
     vec3 p = rayOrigin + rayDirection * d;
     vec3 n = GetNormal(p);
     vec3 r = reflect(rayDirection, n);
@@ -154,24 +138,21 @@ void main() {  const float mouseFactor = 0.0005;
     float mat = sceneMaterial(p);
     dif = dot(n, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
 
-    // reflection
-    dif *= mat;
+    if (mat == 0.0) {
+      dif *= smoothstep(3.0, 0.0, length(p.xz));
+    }
 
-    if (mat == 1.0) {
-      vec3 reflectDirection = normalize(r) + vec3(pbm_simplex_noise3(p)) * 0.1;
-      vec3 reflectOrigin = p + reflectDirection * SURF_DIST  + 0.02;
+    vec3 reflectDirection = normalize(r) + vec3(pbm_simplex_noise3(p)) * 0.1;
+    vec3 reflectOrigin = p + reflectDirection * SURF_DIST  + 0.02;
 
-      float d1 = rayMarch(reflectOrigin, reflectDirection);
+    float d1 = rayMarch(reflectOrigin, reflectDirection);
 
-      if (d1 < MAX_DIST) {
-        col.b = 1.0;
+    if (d1 < MAX_DIST) {
+      vec3 p1 = reflectOrigin + reflectDirection * d1;
+      vec3 n1 = GetNormal(p1);
 
-        vec3 p1 = reflectOrigin + reflectDirection * d1;
-        vec3 n1 = GetNormal(p1);
-
-        dif1 = dot(n1, normalize(vec3(1.0, 2.0, 3.0))) * 0.5 + 0.5;
-        dif = mix(dif, dif1, (1.0 - mat * 0.3));
-      }
+      dif1 = dot(n1, normalize(vec3(1.0, 2.0, 3.0))) * 0.3 + 0.2;
+      dif = mix(dif, dif1, (1.0 - mat * 0.3));
     }
   }
 

@@ -168,9 +168,12 @@ addShader({
 import sh009 from 'shaders/raymarch-reflections3.frag'
 
 addShader({
-  name: 'Raymarch with reflections 2',
+  name: 'Shiny gyroid',
   description: '',
   vertexSource: squareVert,
   fragmentSource: sh009,
-  parameters: [{ id: 'gyrdens1', label: 'Gyroid density', default: 0.5 }],
+  parameters: [
+    { id: 'gyrdens1', label: 'Gyroid density', default: 0.5 },
+    { id: 'control1', label: 'Control1', default: 0.5 },
+  ],
 })
