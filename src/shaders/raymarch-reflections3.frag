@@ -50,7 +50,7 @@ float hash21_2(vec2 p){
 
 float dPlane(vec3 point) {
   float dist = point.y + 0.8;
-  return dist;
+  return dist * cos(length(point.xz) / (100.0 * 0.08));
 }
 
 float dSphere(vec3 point, float radius) {
