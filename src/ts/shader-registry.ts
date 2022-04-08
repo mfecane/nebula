@@ -198,3 +198,25 @@ addShader({
     },
   },
 })
+
+import sh010 from 'shaders/raymarch-reflections4.frag'
+
+addShader({
+  name: 'Emissive gyroid',
+  description: '',
+  vertexSource: squareVert,
+  fragmentSource: sh010,
+  type: 'tex',
+  parameters: [{ id: 'control1', label: 'Control1', default: 0.5 }],
+  texture: { src: img001 },
+  textureCube: {
+    src: {
+      posX: posX01,
+      negX: negX01,
+      posY: posY01,
+      negY: negY01,
+      posZ: posZ01,
+      negZ: negZ01,
+    },
+  },
+})
