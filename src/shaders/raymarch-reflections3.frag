@@ -18,18 +18,19 @@ uniform float u_control2;
 uniform sampler2D u_Sampler;
 uniform samplerCube u_Sampler2;
 
-$lib
-$distances
-$noise
-$simplex-noise
-$col
-
 #define PI  3.14159265358
 #define TAU 6.28318530718
 
 #define MAX_STEPS 128
 #define MAX_DIST 15.0
 #define SURF_DIST 0.0005 // hit distance
+
+$lib
+$distances
+$noise
+$simplex-noise
+$col
+$sampleBlur
 
 #define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
 
@@ -125,9 +126,10 @@ vec3 GetNormal(vec3 p) {
   return normalize(n);
 }
 
-void main() {  const float mouseFactor = 0.0005;
+void main() {
+  const float mouseFactor = 0.0005;
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(0.0, -0.2, -0.5 - u_scrollValue * 1.0);
+	vec3 rayOrigin = vec3(-0.4, 0.0, -0.5 - u_scrollValue * 1.0);
   float mouseY1 = max(u_mouseY, -70.0);
 
 
@@ -147,27 +149,27 @@ void main() {  const float mouseFactor = 0.0005;
   float dif;
   float dif1;
 
+  // vec4 samp = SampleCubeBlur(rayDirection);
   vec4 samp = texture(u_Sampler2, rayDirection);
   col = samp.rgb * 0.3;
 
   if (d < MAX_DIST) {
     vec3 p = rayOrigin + rayDirection * d;
     vec3 n = GetNormal(p);
-    vec3 r = reflect(rayDirection, n);
     float mat = sceneMaterial(p);
-    dif = dot(n, normalize(vec3(-2.0, 2.0, -2.0))) * 0.5 + 0.5;
+    vec3 shiftpoint = (p +
+      vec3(
+        cos(u_time / 20.0 + 1.3255),
+        u_time / 20.0,
+        sin(u_time / 20.0 + 2.5342)
+      ));
+    vec3 r = reflect(rayDirection, n) + vec3(pbm_simplex_noise3(shiftpoint * 5.0)) * 0.2 * (1.0 - mat);
+    dif = dot(n, normalize(vec3(-1.0, 2.0, -2.0))) * 0.6 + 0.6;
 
     vec4 samp = texture(u_Sampler2, r);
-    col = samp.rgb;
+    col = samp.rgb * dif + 0.05 * dif * dot(n, vec3(0.0, 1.0, 0.0));
 
-    if (mat == 0.0) {
-      col *= 0.5;
-      dif *= smoothstep(3.0, 0.0, length(p.xz));
-    } else {
-      dif *= 2.0;
-    }
-
-    vec3 reflectDirection = normalize(r) + vec3(pbm_simplex_noise3(p)) * 0.1;
+    vec3 reflectDirection = normalize(r);
     vec3 reflectOrigin = p + reflectDirection * SURF_DIST  + 0.02;
 
     float d1 = rayMarch(reflectOrigin, reflectDirection);
@@ -176,18 +178,21 @@ void main() {  const float mouseFactor = 0.0005;
       vec3 p1 = reflectOrigin + reflectDirection * d1;
       vec3 n1 = GetNormal(p1);
       vec3 r1 = reflect(reflectDirection, n1);
-      vec4 samp = texture(u_Sampler, r1.xz, 0.0);
-
-      col = mix(
-        samp.rgb,
-        mix(vec3(0.0 , -1.0, 0.0), samp.rgb, smoothstep(-1.0, 1.0, dot(n1, vec3(0.0,-1.0, 0.0)))),
-        u_control2
-      );
-
-      dif1 = dot(n1, normalize(vec3(-2.0, 2.0, -2.0))) * 0.5 + 0.5;
+      vec4 samp = texture(u_Sampler2, r1);
+      col += samp.rgb / 2.0;
     }
-    col *= vec3(dif);
+
+    if (mat == 0.0) {
+      col *= 0.8 * smoothstep(3.0, 0.0, length(p.xz));
+    } else {
+      col = 1.2 * mix(
+        col,
+        vec3( 0.0, -3.5, 0.5) * col.zyx,
+        smoothstep(0.8, 0.1, abs(dot(n, -rayDirection - vec3(0.0, -0.1, 0.0))))
+      );
+    }
   }
 
+  col *= 1.0 - 0.2 * sin(uv.y * 900.0);
   FragColor = vec4(col, 1.0);
 }
