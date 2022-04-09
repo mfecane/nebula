@@ -1,5 +1,4 @@
 import squareVert from 'shaders/nebula.vert'
-import raymarchGeo from 'shaders/raymarch-geo.frag'
 const shaderList = []
 
 const addShader = (sh) => {
@@ -10,9 +9,45 @@ export const getShaderList = () => {
   return shaderList
 }
 
+import sh009 from 'shaders/raymarch-reflections3.frag'
+import img001 from 'assets/bg.jpg'
+
+import posX01 from 'assets/Yokohama3/posx.jpg'
+import negX01 from 'assets/Yokohama3/negx.jpg'
+import posY01 from 'assets/Yokohama3/posy.jpg'
+import negY01 from 'assets/Yokohama3/negy.jpg'
+import posZ01 from 'assets/Yokohama3/posz.jpg'
+import negZ01 from 'assets/Yokohama3/negz.jpg'
+
+addShader({
+  name: 'Shiny gyroid',
+  description: 'Cubemap sampling techniques',
+  vertexSource: squareVert,
+  fragmentSource: sh009,
+  type: 'tex',
+  parameters: [
+    { id: 'gyrdens1', label: 'Gyroid density', default: 0.5 },
+    { id: 'control1', label: 'Control1', default: 0.5 },
+    { id: 'control2', label: 'Fresnel', default: 0.5 },
+  ],
+  texture: { src: img001 },
+  textureCube: {
+    src: {
+      posX: posX01,
+      negX: negX01,
+      posY: posY01,
+      negY: negY01,
+      posZ: posZ01,
+      negZ: negZ01,
+    },
+  },
+})
+
+import raymarchGeo from 'shaders/strings-burning.frag'
+
 addShader({
   name: 'Burning filament strings',
-  description: '',
+  description: 'Volumetric raymarcher, researching glow',
   vertexSource: squareVert,
   fragmentSource: raymarchGeo,
   parameters: [
@@ -20,6 +55,16 @@ addShader({
     { id: 'gyroidOffset', label: 'Gyroid offset', default: 0.5 },
     { id: 'pixelate', label: 'Pixelate', default: 0.5 },
   ],
+})
+
+import sh008 from 'shaders/raymarch-reflections2.frag'
+
+addShader({
+  name: 'Balloon with lights',
+  description: 'Playing with reflections',
+  vertexSource: squareVert,
+  fragmentSource: sh008,
+  parameters: [{ id: 'gamma', label: 'Gamma', default: 0.5 }],
 })
 
 import raymarchGeo01 from 'shaders/raymarch-geo-01.frag'
@@ -47,31 +92,11 @@ addShader({
   ],
 })
 
-import fractal from 'shaders/fractal.frag'
-
-addShader({
-  name: 'Pillars',
-  description: 'Simple raymarcher',
-  vertexSource: squareVert,
-  fragmentSource: fractal,
-  parameters: [{ id: 'thick', label: 'Thickness', default: 0.2 }],
-})
-
-import nebulaPlane from 'shaders/nebula-plane.frag'
-
-addShader({
-  name: 'Twisted mess',
-  description: 'nebulaPlane',
-  vertexSource: squareVert,
-  fragmentSource: nebulaPlane,
-  parameters: [],
-})
-
 import fads7fa7 from 'shaders/string-gyroid.frag'
 
 addShader({
   name: 'String gyroid',
-  description: '',
+  description: 'infinite gyroid space',
   vertexSource: squareVert,
   fragmentSource: fads7fa7,
   parameters: [],
@@ -96,7 +121,7 @@ import sh003 from 'shaders/nebula.frag'
 
 addShader({
   name: 'Nebula',
-  description: 'Basic raymarcher',
+  description: 'Volumetric nebula',
   vertexSource: squareVert,
   fragmentSource: sh003,
   parameters: [
@@ -104,6 +129,34 @@ addShader({
     { id: 'control4', label: 'Volume2', default: 0.5 },
     { id: 'control1', label: 'Volume3', default: 0.5 },
     { id: 'control5', label: 'Light', default: 0.5 },
+  ],
+})
+
+import nebulaPlane from 'shaders/nebula-plane.frag'
+
+addShader({
+  name: 'Nebula: twisted mess',
+  description: '',
+  vertexSource: squareVert,
+  fragmentSource: nebulaPlane,
+  parameters: [],
+})
+
+import sh005 from 'shaders/nebula-3.frag'
+import sh006 from 'shaders/background2.frag'
+
+addShader({
+  name: 'Nebula 3',
+  description: 'Nice volumetric effect. Warning! Very slow shader.',
+  vertexSource: squareVert,
+  fragmentSource: sh005,
+  bgVertexSource: squareVert,
+  bgFragmentSource: sh006,
+  type: 'bg',
+  parameters: [
+    { id: 'control1', label: 'Pulse', default: 0.5 },
+    { id: 'control2', label: 'Вздръжне эффект', default: 0.5 },
+    { id: 'quality', label: 'Quality', default: 0.5 },
   ],
 })
 
@@ -127,83 +180,11 @@ addShader({
   parameters: [],
 })
 
-import sh005 from 'shaders/nebula-3.frag'
-import sh006 from 'shaders/background2.frag'
-
-addShader({
-  name: 'Nebula with bg',
-  description: 'Caution! Heavy.',
-  vertexSource: squareVert,
-  fragmentSource: sh005,
-  bgVertexSource: squareVert,
-  bgFragmentSource: sh006,
-  type: 'bg',
-  parameters: [
-    { id: 'control1', label: 'Pulse', default: 0.5 },
-    { id: 'control2', label: 'Вздръжне эффект', default: 0.5 },
-    { id: 'quality', label: 'Quality', default: 0.5 },
-  ],
-})
-
-import sh007 from 'shaders/raymarch-reflections.frag'
-
-addShader({
-  name: 'Crazy shit reflections',
-  description: '',
-  vertexSource: squareVert,
-  fragmentSource: sh007,
-  parameters: [],
-})
-
-import sh008 from 'shaders/raymarch-reflections2.frag'
-
-addShader({
-  name: 'Raymarch with reflections',
-  description: '',
-  vertexSource: squareVert,
-  fragmentSource: sh008,
-  parameters: [{ id: 'gamma', label: 'Gamma', default: 0.5 }],
-})
-
-import sh009 from 'shaders/raymarch-reflections3.frag'
-import img001 from 'assets/bg.jpg'
-
-import posX01 from 'assets/Yokohama3/posx.jpg'
-import negX01 from 'assets/Yokohama3/negx.jpg'
-import posY01 from 'assets/Yokohama3/posy.jpg'
-import negY01 from 'assets/Yokohama3/negy.jpg'
-import posZ01 from 'assets/Yokohama3/posz.jpg'
-import negZ01 from 'assets/Yokohama3/negz.jpg'
-
-addShader({
-  name: 'Shiny gyroid',
-  description: '',
-  vertexSource: squareVert,
-  fragmentSource: sh009,
-  type: 'tex',
-  parameters: [
-    { id: 'gyrdens1', label: 'Gyroid density', default: 0.5 },
-    { id: 'control1', label: 'Control1', default: 0.5 },
-    { id: 'control2', label: 'Fresnel', default: 0.5 },
-  ],
-  texture: { src: img001 },
-  textureCube: {
-    src: {
-      posX: posX01,
-      negX: negX01,
-      posY: posY01,
-      negY: negY01,
-      posZ: posZ01,
-      negZ: negZ01,
-    },
-  },
-})
-
 import sh010 from 'shaders/raymarch-reflections4.frag'
 
 addShader({
   name: 'Emissive gyroid',
-  description: '',
+  description: 'Work in progress',
   vertexSource: squareVert,
   fragmentSource: sh010,
   type: 'tex',
@@ -219,4 +200,72 @@ addShader({
       negZ: negZ01,
     },
   },
+})
+
+import sh011 from 'shaders/smoke-ball.frag'
+
+addShader({
+  name: 'Smoke ball',
+  description: 'Volumetric ray march',
+  vertexSource: squareVert,
+  fragmentSource: sh011,
+  parameters: [],
+})
+
+import sh013 from 'shaders/smoke-ball-lights.frag'
+
+addShader({
+  name: 'Smoke ball 2',
+  description: 'With lights',
+  vertexSource: squareVert,
+  fragmentSource: sh013,
+  parameters: [
+    { id: 'control1', label: 'Control1', default: 0.5 },
+    { id: 'control2', label: 'Control2', default: 0.5 },
+    { id: 'control3', label: 'Control3', default: 0.5 },
+    { id: 'control4', label: 'Control4', default: 0.5 },
+    { id: 'control5', label: 'Control5', default: 0.5 },
+    { id: 'control6', label: 'Control6', default: 0.5 },
+    { id: 'control7', label: 'Control7', default: 0.5 },
+    { id: 'control8', label: 'Control8', default: 0.5 },
+  ],
+})
+
+import sh012 from 'shaders/sphere-fractal.frag'
+
+addShader({
+  name: 'Sphere fractal',
+  description: 'Stolen from shadertoy',
+  vertexSource: squareVert,
+  fragmentSource: sh012,
+  parameters: [
+    { id: 'control1', label: 'Control1', default: 0.5 },
+    { id: 'control2', label: 'Control2', default: 0.5 },
+    { id: 'control3', label: 'Control3', default: 0.5 },
+    { id: 'control4', label: 'Control4', default: 0.5 },
+    { id: 'control5', label: 'Control5', default: 0.5 },
+    { id: 'control6', label: 'Control6', default: 0.5 },
+    { id: 'control7', label: 'Control7', default: 0.5 },
+    { id: 'control8', label: 'Control8', default: 0.5 },
+  ],
+})
+
+import fractal from 'shaders/fractal.frag'
+
+addShader({
+  name: 'Pillars',
+  description: 'Infinite bars, simple raymarcher',
+  vertexSource: squareVert,
+  fragmentSource: fractal,
+  parameters: [{ id: 'thick', label: 'Thickness', default: 0.2 }],
+})
+
+import sh007 from 'shaders/raymarch-reflections.frag'
+
+addShader({
+  name: 'Crazy reflections',
+  description: '',
+  vertexSource: squareVert,
+  fragmentSource: sh007,
+  parameters: [],
 })
