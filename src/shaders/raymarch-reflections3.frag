@@ -193,6 +193,6 @@ void main() {
     }
   }
 
-  col *= 1.0 - 0.2 * sin(uv.y * 900.0);
+  col *= 1.0 - 0.9 * (0.5  + sin(uv.y * 900.0)) * smoothstep(-0.2, 1.0, uv.y * uv.y);
   FragColor = vec4(col, 1.0);
 }
