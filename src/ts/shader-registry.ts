@@ -27,8 +27,9 @@ addShader({
   type: 'tex',
   parameters: [
     { id: 'gyrdens1', label: 'Gyroid density', default: 0.5 },
-    { id: 'control1', label: 'Control1', default: 0.5 },
-    { id: 'control2', label: 'Fresnel', default: 0.5 },
+    { id: 'thick', label: 'Thickness', default: 0.3 },
+    { id: 'vignette', label: 'Vignette', default: 1.0 },
+    { id: 'dim', label: 'Dim', default: 0.0 },
   ],
   texture: { src: img001 },
   textureCube: {
@@ -268,4 +269,26 @@ addShader({
   vertexSource: squareVert,
   fragmentSource: sh007,
   parameters: [],
+})
+
+import sh014 from 'shaders/image-effect.frag'
+import img002 from 'assets/bg.jpg'
+
+addShader({
+  name: 'Image effect',
+  description: '',
+  vertexSource: squareVert,
+  fragmentSource: sh014,
+  texture: { src: img002 },
+  type: 'tex',
+  parameters: [
+    { id: 'control1', label: 'Control1', default: 0.5 },
+    { id: 'control2', label: 'Control2', default: 0.5 },
+    { id: 'control3', label: 'Control3', default: 0.5 },
+    { id: 'control4', label: 'Control4', default: 0.5 },
+    { id: 'control5', label: 'Control5', default: 0.5 },
+    { id: 'control6', label: 'Control6', default: 0.5 },
+    { id: 'control7', label: 'Control7', default: 0.5 },
+    { id: 'control8', label: 'Control8', default: 0.5 },
+  ],
 })

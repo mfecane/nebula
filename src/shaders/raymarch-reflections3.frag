@@ -9,11 +9,11 @@ uniform float u_time;
 uniform float u_mouseX;
 uniform float u_mouseY;
 uniform float u_scrollValue;
-uniform float u_gamma;
-uniform float u_gyrdens1;
 
-uniform float u_control1;
-uniform float u_control2;
+uniform float u_gyrdens1;
+uniform float u_vignette;
+uniform float u_dim;
+uniform float u_thick;
 
 uniform sampler2D u_Sampler;
 uniform samplerCube u_Sampler2;
@@ -68,8 +68,8 @@ float dSphere(vec3 point, float radius) {
 float sceneDistance(vec3 point) {
   vec3 p1 = point + vec3(0.0, 0.7 * (0.5 + 0.5 * sin(u_time / 10.0)), 0.0);
 
-  float g1 = sdGyroid2(p1 * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
-  float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.4);
+  float g1 = sdGyroid2(p1 * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.2 + 0.8 * u_thick);
+  float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.2 + 0.8 * u_thick);
   float sph = dSphere(p1, 1.2);
   // float pl = dPlane(point);
   float sph2 = dBigSphere(point, 20.0);
@@ -84,8 +84,8 @@ float sceneDistance(vec3 point) {
 float sceneMaterial(vec3 point) {
   vec3 p1 = point + vec3(0.0, 0.7 * (0.5 + 0.5 * sin(u_time / 10.0)), 0.0);
 
-  float g1 = sdGyroid2(p1 * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.4);
-  float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.4);
+  float g1 = sdGyroid2(p1 * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.2 + 0.8 * u_thick);
+  float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.2 + 0.8 * u_thick);
   float sph = dSphere(p1, 1.2);
   // float pl = dPlane(point);
   float sph2 = dBigSphere(point, 20.0);
@@ -193,6 +193,20 @@ void main() {
     }
   }
 
-  col *= 1.0 - 0.9 * (0.5  + sin(uv.y * 900.0)) * smoothstep(-0.2, 1.0, uv.y * uv.y);
+  col *= 1.0 - 0.9 *
+    (0.5  + sin(uv.y * 900.0)) *
+    smoothstep(-0.2, 1.0, uv.y * uv.y) *
+    u_vignette;
+
+  // dim
+  float norm = clamp(length(col), 0.0, 1.0);
+  col = vec3(
+    blendColor(
+      col * (1.0 - u_dim * 0.2),
+      vec3(50.0 / 255.0, 59.0 / 255.0, 74.0 / 255.0),
+      u_dim * u_dim
+    )
+  ) * (1.0 - norm * norm * u_dim * 0.4);
+
   FragColor = vec4(col, 1.0);
 }
