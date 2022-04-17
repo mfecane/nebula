@@ -9,12 +9,13 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const ImageMinimizerPlugin = require('image-minimizer-webpack-plugin')
 const ErrorOverlayPlugin = require('error-overlay-webpack-plugin')
-const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
+const FaviconsWebpackPlugin = require('favicons-webpack-plugin')
+const Dotenv = require('dotenv-webpack')
 
 module.exports = [
   new CleanWebpackPlugin(),
   new HtmlWebpackPlugin({
-    template: path.resolve(root, 'src/templates/index.html')
+    template: path.resolve(root, 'src/templates/index.html'),
   }),
   // new CopyPlugin({
   //   patterns: [
@@ -25,6 +26,9 @@ module.exports = [
   //   ],
   // }),
   new MiniCssExtractPlugin(),
+  new Dotenv({
+    path: path.resolve(root, '.env.local'),
+  }),
   // new ErrorOverlayPlugin(),
   // new ImageMinimizerPlugin({
   //   minimizerOptions: {

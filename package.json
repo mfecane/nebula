@@ -68,9 +68,13 @@
   "dependencies": {
     "bezier-curve": "^1.0.0",
     "cubic-spline": "^3.0.3",
+    "dotenv-webpack": "^7.1.0",
+    "firebase": "^9.6.11",
     "parse-svg-path": "^0.1.2",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "react-router-dom": "^6.3.0",
+    "styled-components": "^5.3.5",
     "svg-parser": "^2.0.4",
     "three": "^0.138.3"
   }
