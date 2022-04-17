@@ -1,5 +1,11 @@
 import { initializeApp } from 'firebase/app'
-import 'firebase/auth'
+import {
+  Auth,
+  getAuth,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  User,
+} from 'firebase/auth'
 
 const app = initializeApp({
   apiKey: process.env.SHADER_GALLERY_API_KEY,
@@ -10,5 +16,8 @@ const app = initializeApp({
   appId: process.env.SHADER_GALLERY_APP_ID,
 })
 
-export const auth = app.auth()
+export const auth: Auth = getAuth(app)
+
+export { createUserWithEmailAndPassword, onAuthStateChanged, User }
+
 export default app
