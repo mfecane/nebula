@@ -10,7 +10,7 @@ const cancelEvent = (e) => {
 
 export default ({ children }) => {
   const [visible, setVisible] = useState(false)
-  const ref = useRef()
+  const ref = useRef(null)
 
   const collapse = () => {
     setVisible(!visible)

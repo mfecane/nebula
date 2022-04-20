@@ -9,6 +9,18 @@ export const getShaderList = () => {
   return shaderList
 }
 
+addShader({
+  name: 'Basic Color',
+  description: 'Cubemap sampling techniques',
+  vertexSource: squareVert,
+  fragmentSource: `
+vec4 getColor(vec2 inuv) {
+  return vec4(vec3(0.5 + inuv.x * 0.5, 0.5 + inuv.y * 0.5, 0.0), 1.0);
+}
+  `.trim(),
+  parameters: [],
+})
+
 import sh009 from 'shaders/raymarch-reflections3.frag'
 import img001 from 'assets/bg.jpg'
 

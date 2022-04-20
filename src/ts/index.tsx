@@ -6,6 +6,7 @@ import App from 'ts/components/app'
 import 'css/config.scss'
 import 'css/null.scss'
 import 'css/global.scss'
+import 'css/styles.scss'
 
 import 'ts/renderer-manager'
 

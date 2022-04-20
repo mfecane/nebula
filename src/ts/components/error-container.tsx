@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import StateContext from 'ts/state-context'
+import StateContext from 'ts/contexts/state-context'
 
 import styles from 'ts/components/error-container.module.scss'
 

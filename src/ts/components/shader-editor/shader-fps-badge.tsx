@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { getFps } from 'ts/renderer-manager'
 
-import styles from 'ts/components/shader-fps-badge.module.scss'
+import styles from 'ts/components/shader-editor/shader-fps-badge.module.scss'
 
 const ShaderFpsBadge = () => {
   const [value, setValue] = useState(0.0)

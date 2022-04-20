@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import StateContext from 'ts/state-context'
+import StateContext from 'ts/contexts/state-context'
 
 import ShaderControl from 'ts/components/shader-control'
 

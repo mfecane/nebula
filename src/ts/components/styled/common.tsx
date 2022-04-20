@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 const getColor =
   (prop: string) =>
@@ -11,6 +11,13 @@ export const CenterContainer = styled.div`
   justify-content: center;
   width: 100%;
   height: 100%;
+`
+
+export const Container = styled.div`
+  max-width: 1200px;
+  width: 100%;
+  margin: auto;
+  padding: 20px;
 `
 
 export const Button = styled.button`
@@ -26,4 +33,26 @@ export const Header1 = styled.h1`
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 16px;
+`
+
+export const ModalContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #000000cc;
+`
+
+export const Row = styled.div`
+  display: flex;
+  margin: 16px 0;
+  gap: 10px;
+  padding: 16px;
+  align-items: center;
+  ${(props) =>
+    props.center &&
+    css`
+      justify-content: center;
+    `}
 `

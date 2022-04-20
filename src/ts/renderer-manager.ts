@@ -4,13 +4,15 @@ import RendererBG from 'ts/renderers/renderer-bg'
 import RendererTexture from 'ts/renderers/renderer-tex'
 
 let renderer: Renderer = null
-let canvasContainer: HTMLDivElement
+export let canvasContainer: HTMLDivElement
 let shaderList: []
 let errorCallback = (e: Error) => console.error(e)
 
 const defaults = {
   type: 'single',
 }
+
+// glow ring shader
 
 const createRenderer = function (options) {
   switch (options.type) {
@@ -74,7 +76,7 @@ export const getFps = function (): number {
   return NaN
 }
 
-export const init = function (): void {
+export const init = function (el: HTMLDivElement): void {
   shaderList = getShaderList()
-  canvasContainer = document.getElementById('canvas-container')
+  canvasContainer = el
 }

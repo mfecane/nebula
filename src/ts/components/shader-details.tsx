@@ -1,31 +1,24 @@
 import React, { useContext } from 'react'
-import StateContext from 'ts/state-context'
+import StateContext from 'ts/contexts/state-context'
 
 import ShaderControls from 'ts/components/shader-controls'
-import { PAGES } from 'ts/pages'
 
 import styles from 'ts/components/shader-details.module.scss'
+import { useParams } from 'react-router-dom'
 
 const ShaderDetails = () => {
   const [{ shaderList, selectedShader }, dispatch] = useContext(StateContext)
+  let params = useParams()
 
   const shader = shaderList.find(
-    ({ id }: { id: number }) => id === selectedShader
+    ({ id }: { id: number }) => id === parseInt(params.shaderId)
   )
 
   if (shader) {
     return (
       <div className={styles.container}>
         <div>
-          <button
-            className={styles.backButton}
-            onClick={() => {
-              dispatch({
-                type: 'setPage',
-                payload: PAGES.PAGE_LIST,
-              })
-            }}
-          >
+          <button className={styles.backButton}>
             <i></i>
             <label>To gallery</label>
           </button>

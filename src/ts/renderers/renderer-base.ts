@@ -42,6 +42,8 @@ export default class Renderer {
   constructor(root: HTMLDivElement, options: rendrerOptions) {
     this.options = options
     this.root = root
+    if (!this.root) return
+
     this.canvas = document.createElement(`canvas`)
     this.root.appendChild(this.canvas)
     this.canvas.id = 'canvas'
@@ -51,6 +53,7 @@ export default class Renderer {
     this.setCanvasSize()
 
     window.addEventListener('resize', this.setCanvasSize.bind(this))
+    window.addEventListener('resize-event', this.setCanvasSize.bind(this))
 
     orbitControlInit()
     orbitControlAnimate()
