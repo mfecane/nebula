@@ -1,9 +1,17 @@
-import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { Button } from 'ts/components/styled/common'
-import useAuth from 'ts/hooks/use-auth'
+import { IconButton } from 'ts/components/styled/common'
 import useFirestore from 'ts/hooks/use-firestore'
+import UserMenu from 'ts/components/header/user-menu'
+
+const Wrapper = styled.div`
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  align-self: stretch;
+`
 
 const UserName = styled.div`
   font-weight: bold;
@@ -12,42 +20,57 @@ const UserName = styled.div`
   }};
 `
 
+const MenuContainer = styled.div`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: black;
+  padding: 10px;
+`
+
+const Icon = styled.i`
+  display: block;
+  width: 24px;
+  height: 24px;
+  background-color: white;
+`
+
 const HeaderUser = (): JSX.Element => {
-  const { signout } = useAuth()
   const {
     state: { currentUser },
   } = useFirestore()
-  const navigate = useNavigate()
+  const [showMenu, setShowMenu] = useState(false)
+  const ref = useRef()
 
-  if (currentUser) {
-    return (
-      <>
-        <UserName>
-          <Link to="/account">{currentUser?.name || currentUser?.email}</Link>
-        </UserName>
-        <Button onClick={signout}>Log Out</Button>
-      </>
-    )
-  } else {
-    return (
-      <>
-        <Button
-          onClick={() => {
-            navigate('/login')
-          }}
-        >
-          Log In
-        </Button>
-        <Button
-          onClick={() => {
-            navigate('/signup')
-          }}
-        >
-          Sign Up
-        </Button>
-      </>
-    )
+  const hadleMenuClick = (e) => {
+    setShowMenu((current) => !current)
   }
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      event.stopPropagation()
+      if (!ref?.current?.contains(event.target)) {
+        setShowMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+  }, [ref])
+
+  return (
+    <Wrapper>
+      <UserName>
+        <Link to="/account">{currentUser?.name || currentUser?.email}</Link>
+      </UserName>
+      <IconButton onClick={hadleMenuClick}>
+        <Icon className="icon icon-burger" />
+      </IconButton>
+      {showMenu && (
+        <MenuContainer ref={ref}>
+          <UserMenu />
+        </MenuContainer>
+      )}
+    </Wrapper>
+  )
 }
 
 export default HeaderUser

@@ -1,12 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import ShaderTitle from 'ts/components/shader-editor/shader-title'
-import useGlobalState from 'ts/contexts/state-context'
 
 import ShaderFpsBadge from 'ts/components/shader-editor/shader-fps-badge'
 import RendererCode from 'ts/renderers/renderer-code'
 import { CreateRenderer } from 'ts/model/shader-code-factory'
-import { getShaderList } from 'ts/shader-registry'
+import useFirestore from 'ts/hooks/use-firestore'
 
 const Wrapper = styled.div`
   padding: 16px;
@@ -46,25 +45,30 @@ const CanvasContainer = styled.div`
 `
 
 const Canvas = (): JSX.Element => {
-  const [{ selectedShader }] = useGlobalState()
-  const [error, setError] = useState()
-  let renderer: RendererCode
-
-  const list = getShaderList()
-  const shader = list.find(
-    ({ id: id1 }: { id: number }) => id1 === selectedShader
-  )
   const ref = useRef(null)
+  const {
+    state: { currentShader },
+  } = useFirestore()
+
+  let renderer: RendererCode
+  console.log('render Canvas')
 
   useEffect(() => {
-    const createRenderer = new CreateRenderer()
-    createRenderer.createRenerer(ref.current, shader.fragmentSource)
-
-    if (renderer)
-      return () => {
+    if (currentShader) {
+      if (renderer) {
         renderer.destroy()
       }
-  }, [selectedShader])
+
+      console.log('CreateRenderer')
+      const createRenderer = new CreateRenderer()
+      renderer = createRenderer.createRenerer(ref.current, currentShader.code)
+
+      if (renderer)
+        return () => {
+          renderer.destroy()
+        }
+    }
+  }, [currentShader])
 
   return (
     <Wrapper>

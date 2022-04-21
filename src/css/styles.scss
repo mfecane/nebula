@@ -1,3 +1,9 @@
+.icon {
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+}
+
 .icon-vertical-dots {
   mask-image: url(assets/vertical-dots.svg);
   mask-position: center;
@@ -10,4 +16,8 @@
   mask-position: center;
   mask-repeat: no-repeat;
   mask-size: contain;
+}
+
+.icon-burger {
+  mask-image: url(assets/burger.svg);
 }

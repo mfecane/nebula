@@ -17,7 +17,7 @@ export const Container = styled.div`
   max-width: 1200px;
   width: 100%;
   margin: auto;
-  padding: 20px;
+  padding: 0 20px;
 `
 
 export const Button = styled.button`
@@ -27,6 +27,29 @@ export const Button = styled.button`
   color: ${getColor('dark')};
   background-color: ${getColor('accent')};
   font-weight: bold;
+`
+
+export const IconButton = styled.button`
+  padding: 8px;
+  border-radius: 3px;
+  color: ${getColor('dark')};
+  background-color: ${getColor('accent')};
+  font-weight: bold;
+`
+
+export const ButtonLink = styled.button`
+  color: ${getColor('light')};
+  font-weight: bold;
+  font-size: 16px;
+
+  a {
+    color: white;
+  }
+
+  a:hover {
+    color: white;
+    text-decoration: underline;
+  }
 `
 
 export const Header1 = styled.h1`

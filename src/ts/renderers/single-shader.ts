@@ -1,6 +1,9 @@
 import Shader from 'ts/webgl/shader'
 
-import { init as initControls, getValue as getControlValue } from 'ts/components/controls'
+import {
+  init as initControls,
+  getValue as getControlValue,
+} from 'ts/components/controls'
 
 import {
   init as orbitControlInit,
@@ -47,7 +50,6 @@ const drawImage = function (): void {
   nebulaShader.setUniform('u_MVP', proj)
   const [mouseX, mouseY, scrollValue] = getMouseControl()
   time = (Date.now() - startTime) / 1000
-  // console.log('time', time)
   nebulaShader.setUniform('u_time', time)
   nebulaShader.setUniform('u_mouseX', mouseX)
   nebulaShader.setUniform('u_mouseY', mouseY)
@@ -78,7 +80,7 @@ const setCanvasSize = function (): void {
   gl.viewport(0, 0, width, height)
 }
 
-const calcFps = function() {
+const calcFps = function () {
   let now = Date.now()
   if (now === fpsTime) {
     return
@@ -88,11 +90,14 @@ const calcFps = function() {
   if (fpsHistory.length < 10) {
     return
   }
-  fps = Math.floor(fpsHistory.reduce((acc, cur) => {
-    return (acc + cur) / 2
-  }) * 100) / 100
+  fps =
+    Math.floor(
+      fpsHistory.reduce((acc, cur) => {
+        return (acc + cur) / 2
+      }) * 100
+    ) / 100
   window.fps.innerHTML = fps
-  fpsHistory.unshift();
+  fpsHistory.unshift()
 }
 
 export const animate = function () {
@@ -119,10 +124,7 @@ export const init = function (root, vertShaderSrc, fragShaderSrc) {
   initControls()
 
   nebulaShader = new Shader(gl)
-  nebulaShader.createProgram(
-    vertShaderSrc,
-    fragShaderSrc
-  )
+  nebulaShader.createProgram(vertShaderSrc, fragShaderSrc)
 
   const vertexBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)

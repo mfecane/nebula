@@ -28,6 +28,7 @@ const App = (): JSX.Element => {
                 <Route path="/" element={<Layout />}>
                   <Route path="shader/" element={<ShaderList />} />
                   <Route path="shader/:shaderId" element={<Shader />} />
+                  <Route path="shader/user" element={<ShaderList />} />
                   <Route index element={<ShaderList />} />
                 </Route>
                 <Route path="/signup" element={<SignUp />} />

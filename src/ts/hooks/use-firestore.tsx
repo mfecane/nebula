@@ -10,7 +10,6 @@ import {
   setDoc,
 } from 'firebase/firestore'
 import useAuth from 'ts/hooks/use-auth'
-import ShaderList from 'ts/components/shader-list/shader-list'
 
 export const FirestoreContext = createContext(undefined)
 
@@ -18,26 +17,64 @@ const useFirestore = () => {
   return useContext(FirestoreContext)
 }
 
-const reducer = (state, action) => {
-  console.log('action', action)
-  switch (action.type) {
+interface StateUser {
+  email: string
+  name?: string
+  uid: string
+}
+
+interface Shader {
+  id: string
+  code: string
+  user: string
+}
+
+interface State {
+  shaderList: Shader[]
+  userList: StateUser[]
+  currentUser: StateUser
+  currentShader: Shader
+  shaderListLoading: boolean
+}
+
+type Action =
+  | { type: 'SET_CURRENT_USER'; payload: StateUser }
+  | { type: 'ADD_CURRENT_USER_DATA'; payload: StateUser }
+  | {
+      type: 'SET_SHADER_LIST'
+      payload: Shader[]
+    }
+  | { type: 'ADD_CURRENT_USER_DATA'; payload: StateUser }
+  | { type: 'CREATE_SHADER'; payload: Shader }
+  | { type: 'SET_CURRENT_SHADER'; payload: string }
+  | { type: 'SAVE_CURRENT_SHADER' }
+  | { type: 'UPDATE_CURRENT_SHADER'; payload: Shader }
+  | { type: 'SET_USER_LIST'; payload: StateUser[] }
+
+const reducer = (state: State, action: Action) => {
+  const { type, payload } = action
+
+  switch (type) {
     case 'SET_CURRENT_USER':
       return {
         ...state,
-        currentUser: action.payload,
+        currentUser: payload,
       }
 
     case 'ADD_CURRENT_USER_DATA':
       return {
         ...state,
-        currentUser: { ...state.currentUser, ...action.payload },
+        currentUser: { ...state.currentUser, ...payload },
       }
 
     case 'SET_SHADER_LIST':
-      return { ...state, shaderList: action.payload }
+      return { ...state, shaderList: payload, shaderListLoading: false }
+
+    case 'SET_USER_LIST':
+      return { ...state, userList: payload, shaderListLoading: false }
 
     case 'CREATE_SHADER': {
-      const newShader = { name: action.payload }
+      const newShader = { name: payload }
       const shaderList = [...state.shaderList, newShader]
 
       return {
@@ -46,10 +83,41 @@ const reducer = (state, action) => {
       }
     }
 
+    case 'SET_CURRENT_SHADER': {
+      if (state.currentShader?.id === payload) {
+        return state
+      }
+
+      const shader = state.shaderList.find((el) => el.id === payload)
+
+      return {
+        ...state,
+        currentShader: shader,
+      }
+    }
+
+    case 'SAVE_CURRENT_SHADER': {
+      const idx = state.shaderList.findIndex(
+        (el) => el.id === state.currentShader.id
+      )
+      const shaderList = [...state.shaderList]
+      shaderList.splice(idx, 1, state.currentShader)
+
+      return {
+        ...state,
+        shaderList,
+      }
+    }
+
+    case 'UPDATE_CURRENT_SHADER': {
+      const shader = { ...state.currentShader, ...payload }
+      return { ...state, currentShader: shader }
+    }
+
     default:
       return state
   }
-}
+} // reducer
 
 export const FirestoreContextProvider = ({
   children,
@@ -58,15 +126,20 @@ export const FirestoreContextProvider = ({
 }): JSX.Element => {
   const { currentUser } = useAuth()
   const [state, dispatch] = useReducer(reducer, {
-    currentUser: currentUser,
     shaderList: [],
+    shaderListLoading: true,
+    currentUser: null,
+    currentShader: null,
   })
 
   const initCurrentUser = () => {
     const read = async () => {
       const docSnap = await getDoc(doc(db, 'users', currentUser.uid))
       if (docSnap.exists()) {
-        dispatch({ type: 'ADD_CURRENT_USER_DATA', payload: docSnap.data() })
+        dispatch({
+          type: 'ADD_CURRENT_USER_DATA',
+          payload: docSnap.data() as StateUser,
+        })
       } else {
         throw new Error('Invalid user')
       }
@@ -84,14 +157,12 @@ export const FirestoreContextProvider = ({
   const initShaderList = () => {
     const read = async () => {
       const q = query(collection(db, 'shaders'))
-      const shaders = []
+      const shaders: Shader[] = []
       const querySnapshot = await getDocs(q)
       querySnapshot.forEach((doc) => {
         // doc.data() is never undefined for query doc snapshots
-        shaders.push({ ...doc.data(), id: doc.id })
+        shaders.push({ ...(doc.data() as Shader), id: doc.id })
       })
-
-      console.log('shaders', shaders)
 
       dispatch({
         type: 'SET_SHADER_LIST',
@@ -101,10 +172,29 @@ export const FirestoreContextProvider = ({
     read()
   }
 
+  const initUsers = () => {
+    const read = async () => {
+      const q = query(collection(db, 'users'))
+      const users: StateUser[] = []
+      const querySnapshot = await getDocs(q)
+      querySnapshot.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        users.push({ ...(doc.data() as StateUser), uid: doc.id })
+      })
+
+      dispatch({
+        type: 'SET_USER_LIST',
+        payload: users,
+      })
+    }
+    read()
+  }
+
   useEffect(initCurrentUser, [currentUser])
   useEffect(initShaderList, [])
+  useEffect(initUsers, [])
 
-  const updateCurrentUser = async (data) => {
+  const updateCurrentUser = async (data: StateUser) => {
     await setDoc(doc(db, 'users', currentUser.uid), data)
     dispatch({
       type: 'ADD_CURRENT_USER_DATA',
@@ -112,7 +202,7 @@ export const FirestoreContextProvider = ({
     })
   }
 
-  const createShader = async (name) => {
+  const createShader = async (name: string) => {
     if (!currentUser) {
       throw new Error('No user')
     }
@@ -135,10 +225,42 @@ vec4 getColor(vec2 inuv) {
     return docRef.id
   }
 
+  const setCurrentShader = (id: string) => {
+    dispatch({
+      type: 'SET_CURRENT_SHADER',
+      payload: id,
+    })
+  }
+
+  const getShaderById = (id: string) => {
+    return state.shaderList.find((el) => el.id === id)
+  }
+
+  const updateShader = (data) => {
+    dispatch({
+      type: 'UPDATE_CURRENT_SHADER',
+      payload: data,
+    })
+  }
+
+  const saveShader = async () => {
+    await setDoc(doc(db, 'shaders', state.currentShader.id), {
+      ...state.currentShader,
+    })
+    // check is valid
+    dispatch({
+      type: 'SAVE_CURRENT_SHADER',
+    })
+  }
+
   const context = {
     state,
     updateCurrentUser,
     createShader,
+    setCurrentShader,
+    getShaderById,
+    saveShader,
+    updateShader,
   }
 
   return (

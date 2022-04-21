@@ -3,18 +3,26 @@ import { useParams } from 'react-router-dom'
 import Canvas from 'ts/components/shader-editor/canvas'
 import Editor from 'ts/components/shader-editor/editor'
 import EditorContainer from 'ts/components/shader-editor/editor-container'
-import useGlobalState from 'ts/contexts/state-context'
+import useFirestore from 'ts/hooks/use-firestore'
 
 const Shader = (): JSX.Element => {
   const { shaderId } = useParams()
-  const [{ selectedShader }, dispatch] = useGlobalState()
+
+  const {
+    state: { shaderListLoading, currentShader },
+    setCurrentShader,
+  } = useFirestore()
 
   useEffect(() => {
-    dispatch({ type: 'setShader', payload: +shaderId })
-  }, [shaderId])
+    setCurrentShader(shaderId)
+  }, [shaderListLoading, shaderId])
 
-  if (+shaderId !== selectedShader) {
+  if (shaderId !== currentShader?.id) {
     return null
+  }
+
+  if (shaderListLoading) {
+    return <Spinner /> // TODO ::: spinner
   }
 
   return <EditorContainer left={<Editor />} right={<Canvas />} />

@@ -11,6 +11,7 @@ export class CreateRenderer {
   uniforms = []
   renderer: RendererCode
   code: string
+  onError = () => {}
 
   constructor() {}
 
@@ -38,6 +39,8 @@ export class CreateRenderer {
 
     this.renderer.mount()
     this.renderer.animate()
+
+    return this.renderer
   }
 
   prepareSource() {

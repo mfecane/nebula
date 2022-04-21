@@ -1,10 +1,8 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import CodeEditorImport from '@uiw/react-textarea-code-editor'
 import { Row, Button } from 'ts/components/styled/common'
-import useGlobalState from 'ts/contexts/state-context'
-import { getShaderList } from 'ts/shader-registry'
-import { createRenerer } from 'ts/model/shader-code-factory'
+import useFirestore from 'ts/hooks/use-firestore'
 
 const CodeEditor = styled(CodeEditorImport)`
   flex: 2 1 auto;
@@ -18,33 +16,52 @@ const Wrapper = styled.div`
 `
 
 const Editor = (): JSX.Element => {
-  const [{ selectedShader }, dispatch] = useGlobalState()
+  const {
+    state: { currentShader },
+    saveShader,
+    updateShader,
+  } = useFirestore()
+  const [code, setCode] = useState('')
+  const [error, setError] = useState(null)
 
-  const list = getShaderList()
-  const shader = list.find(
-    ({ id: id1 }: { id: number }) => id1 === selectedShader
-  )
+  useEffect(() => {
+    setCode(currentShader?.code)
+  }, [currentShader])
 
-  // const [code, setCode] = React.useState(
-  //   `function add(a, b) {\n  return a + b;\n}`
-  // )
+  const handleSaveShader = () => {
+    const save = async () => {
+      setError('')
+      try {
+        updateShader({
+          code,
+        })
+        saveShader()
+      } catch (e) {
+        setError(e.message)
+      }
+    }
+    save()
+  }
 
-  // useEffect(() => {
-  //   new ShaderCode(code)
-  // }, [code])
+  const handleUpdateShader = () => {
+    updateShader({
+      code,
+    })
+  }
 
   return (
     <Wrapper>
+      {error}
       <CodeEditor
-        value={shader.fragmentSource}
+        value={code}
         language="glsl"
         placeholder="Please enter JS code."
-        onChange={() => void 0}
+        onChange={(evn) => setCode(evn.target.value)}
         padding={15}
         style={{
           height: 0,
           // minHeight: '100%',
-          backgroundColor: '#2B3D57',
+          backgroundColor: '#212b38',
           borderRadius: 3,
           margin: 16,
           marginRight: 2,
@@ -56,9 +73,9 @@ const Editor = (): JSX.Element => {
         }}
       />
       <Row>
-        <Button>Run</Button>
+        <Button onClick={handleUpdateShader}>Run</Button>
         <Button>Fork</Button>
-        <Button>Save</Button>
+        <Button onClick={handleSaveShader}>Save</Button>
       </Row>
     </Wrapper>
   )

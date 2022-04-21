@@ -43,7 +43,6 @@ export const AuthContextProvider = ({
     await setDoc(doc(collection(db, 'users'), userid), {
       name: '',
     })
-    console.log('Created user with: ', userid)
     return userCredential
   }
 

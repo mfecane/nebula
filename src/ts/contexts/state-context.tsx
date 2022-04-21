@@ -24,7 +24,6 @@ export const initialState = (): State => {
 }
 
 const reducer = (state: State, action: Action) => {
-  console.log('reduce', action)
   const { type, payload } = action
 
   switch (type) {
@@ -40,7 +39,6 @@ const reducer = (state: State, action: Action) => {
       break
   }
 
-  console.log('state', state)
   return state
 }
 

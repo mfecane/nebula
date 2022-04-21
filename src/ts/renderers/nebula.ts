@@ -2,7 +2,10 @@ import Shader from 'ts/webgl/shader'
 
 import nebulaVertexShaderSource from 'shaders/nebula.vert'
 import nebulaFragmentShaderSource from 'shaders/fractal.frag'
-import { init as initControls, getValue as getControlValue } from 'ts/components/controls'
+import {
+  init as initControls,
+  getValue as getControlValue,
+} from 'ts/components/controls'
 
 import {
   init as orbitControlInit,
@@ -45,7 +48,6 @@ const drawImage = function (): void {
   nebulaShader.setUniform('u_MVP', proj)
   const [mouseX, mouseY, scrollValue] = getMouseControl()
   time = (Date.now() - startTime) / 1000
-  // console.log('time', time)
   nebulaShader.setUniform('u_time', time)
   nebulaShader.setUniform('u_mouseX', mouseX)
   nebulaShader.setUniform('u_mouseY', mouseY)

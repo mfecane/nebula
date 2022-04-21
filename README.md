@@ -9,6 +9,12 @@
 - add light in center
 - add back button
 
+- error handling in shaders
+- improve list
+- user shaders
+- search
+- access rights
+
 ## STUFF
 
 # WebGl

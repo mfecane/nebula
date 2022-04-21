@@ -20,8 +20,7 @@ const Header = styled.h3`
   margin: 30px;
 `
 
-const ShaderList = () => {
-  // const [{ shaderList }, dispatch] = useGlobalState()
+const ShaderList = (): JSX.Element => {
   const {
     state: { shaderList },
   } = useFirestore()

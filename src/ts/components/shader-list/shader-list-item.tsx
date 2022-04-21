@@ -1,19 +1,29 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 
-import styles from 'ts/components/shader-list/shader-list-item.module.scss'
+const Wrapper = styled.div`
+  padding: 20px 32px;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: rgba(90, 167, 234, 0.142);
+  }
+
+  h2 {
+    font-weight: bold;
+    font-size: 16px;
+  }
+`
 
 const ShaderListItem = ({ item }): JSX.Element => {
   const navigate = useNavigate()
 
   return (
-    <div
-      className={styles.container}
-      onClick={() => navigate(`/shader/${item.id}`)}
-    >
-      <h2 className={`${styles.title}`}>{item.name}</h2>
-      <article className={styles.description}>{item.description}</article>
-    </div>
+    <Wrapper onClick={() => navigate(`/shader/${item.id}`)}>
+      <h2>{item.name}</h2>
+      <div></div>
+    </Wrapper>
   )
 }
 
