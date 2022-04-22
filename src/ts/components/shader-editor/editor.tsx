@@ -49,6 +49,8 @@ const Editor = (): JSX.Element => {
     })
   }
 
+  console.log('render editor')
+
   return (
     <Wrapper>
       {error}

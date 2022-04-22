@@ -7,13 +7,19 @@ import fragmentSourceTemplate from 'shaders/shader-template.frag'
 const defaultUniforms = ['u_time']
 vertexSource as string
 
+interface Options {
+  onError: (e?: Error) => void
+}
+
 export class CreateRenderer {
   uniforms = []
   renderer: RendererCode
   code: string
-  onError = () => {}
+  onError: Options['onError'] = () => {}
 
-  constructor() {}
+  constructor(options: Options) {
+    this.onError = options.onError
+  }
 
   createRenerer(root: HTMLDivElement, code: string) {
     if (!code || !(typeof code === 'string')) throw new Error('Invalid code')
@@ -34,7 +40,9 @@ export class CreateRenderer {
       })
       this.renderer.init()
     } catch (e) {
+      this.onError(e)
       this.renderer.destroy()
+      return
     }
 
     this.renderer.mount()

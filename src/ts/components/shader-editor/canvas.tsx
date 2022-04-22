@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import ShaderTitle from 'ts/components/shader-editor/shader-title'
 
-import ShaderFpsBadge from 'ts/components/shader-editor/shader-fps-badge'
+// import ShaderFpsBadge from 'ts/components/shader-editor/shader-fps-badge'
 import RendererCode from 'ts/renderers/renderer-code'
 import { CreateRenderer } from 'ts/model/shader-code-factory'
 import useFirestore from 'ts/hooks/use-firestore'
@@ -48,10 +48,10 @@ const Canvas = (): JSX.Element => {
   const ref = useRef(null)
   const {
     state: { currentShader },
+    setShaderError,
   } = useFirestore()
 
   let renderer: RendererCode
-  console.log('render Canvas')
 
   useEffect(() => {
     if (currentShader) {
@@ -59,8 +59,9 @@ const Canvas = (): JSX.Element => {
         renderer.destroy()
       }
 
-      console.log('CreateRenderer')
-      const createRenderer = new CreateRenderer()
+      const createRenderer = new CreateRenderer({
+        onError: setShaderError,
+      })
       renderer = createRenderer.createRenerer(ref.current, currentShader.code)
 
       if (renderer)
@@ -68,15 +69,15 @@ const Canvas = (): JSX.Element => {
           renderer.destroy()
         }
     }
-  }, [currentShader])
+  }, [])
+
+  // <ShaderFpsBadge />
 
   return (
     <Wrapper>
       <ShaderTitle name="Shader" author="Mfecane" rating={3000}></ShaderTitle>
       <div className="canvasOuter">
-        <CanvasContainer ref={ref}>
-          <ShaderFpsBadge />
-        </CanvasContainer>
+        <CanvasContainer ref={ref} />
       </div>
     </Wrapper>
   )

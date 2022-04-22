@@ -95,7 +95,7 @@ export default class Shader {
     )
   }
 
-  throwError(shader, source, type): void {
+  throwError(shader: WebGLShader, source: string, type: string): void {
     const re = RegExp('ERROR:\\s+\\d+:(\\d+)', 'g')
     const error = this.gl.getShaderInfoLog(shader).replace(/\x00/g, '').trim()
     let msg = `Error compiling ${type} shader: \n${error}\non:`

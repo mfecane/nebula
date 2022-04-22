@@ -35,6 +35,7 @@ interface State {
   currentUser: StateUser
   currentShader: Shader
   shaderListLoading: boolean
+  shaderError: Error
 }
 
 type Action =
@@ -114,6 +115,10 @@ const reducer = (state: State, action: Action) => {
       return { ...state, currentShader: shader }
     }
 
+    case 'SET_SHADER_ERROR': {
+      return { ...state, shaderError: payload }
+    }
+
     default:
       return state
   }
@@ -130,6 +135,7 @@ export const FirestoreContextProvider = ({
     shaderListLoading: true,
     currentUser: null,
     currentShader: null,
+    shaderError: null,
   })
 
   const initCurrentUser = () => {
@@ -253,6 +259,14 @@ vec4 getColor(vec2 inuv) {
     })
   }
 
+  const setShaderError = (e) => {
+    debugger
+    dispatch({
+      type: 'SET_SHADER_ERROR',
+      payload: e,
+    })
+  }
+
   const context = {
     state,
     updateCurrentUser,
@@ -261,6 +275,7 @@ vec4 getColor(vec2 inuv) {
     getShaderById,
     saveShader,
     updateShader,
+    setShaderError,
   }
 
   return (

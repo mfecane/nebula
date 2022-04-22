@@ -252,8 +252,12 @@ export default class RendererCode {
   }
 
   destroy(): void {
-    this.root.removeChild(this.canvas)
-    window.removeEventListener('resize', this.setCanvasSize.bind(this))
-    cancelAnimationFrame(this.animId)
+    if (this.root.contains(this.canvas)) {
+      this.root.removeChild(this.canvas)
+      window.removeEventListener('resize', this.setCanvasSize.bind(this))
+      cancelAnimationFrame(this.animId)
+    } else {
+      console.info('Check: canvas is not child of root')
+    }
   }
 }
