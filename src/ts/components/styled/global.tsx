@@ -6,6 +6,7 @@ const GlobalStyle = createGlobalStyle`
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background-color: ${({ theme }) => theme.dark2};
   }
 
   a {

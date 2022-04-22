@@ -79,3 +79,11 @@ export const Row = styled.div`
       justify-content: center;
     `}
 `
+
+export const ErrorWrapper = styled.div`
+  color: ${({ theme }) => theme.dark};
+  background-color: #f16d6d;
+  padding: 8px 12px;
+  border-radius: 3px;
+  margin: 6px 0;
+`

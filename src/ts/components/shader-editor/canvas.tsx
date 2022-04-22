@@ -4,7 +4,7 @@ import ShaderTitle from 'ts/components/shader-editor/shader-title'
 
 // import ShaderFpsBadge from 'ts/components/shader-editor/shader-fps-badge'
 import RendererCode from 'ts/renderers/renderer-code'
-import { CreateRenderer } from 'ts/model/shader-code-factory'
+import { ShaderModel } from 'ts/model/shader-model'
 import useFirestore from 'ts/hooks/use-firestore'
 
 const Wrapper = styled.div`
@@ -44,40 +44,54 @@ const CanvasContainer = styled.div`
   transform: translate(-50%, -50%);
 `
 
+const ErrorOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  background: #00000099;
+  color: #ff7070;
+  font-weight: bold;
+  padding: 40px;
+`
+
 const Canvas = (): JSX.Element => {
-  const ref = useRef(null)
+  const containerRef = useRef(null)
+
   const {
-    state: { currentShader },
-    setShaderError,
+    state: { currentShader, shaderError },
   } = useFirestore()
 
-  let renderer: RendererCode
+  const renderer = useRef(null)
 
   useEffect(() => {
     if (currentShader) {
-      if (renderer) {
-        renderer.destroy()
+      if (renderer.current) {
+        renderer.current.destroy()
       }
 
-      const createRenderer = new CreateRenderer({
-        onError: setShaderError,
-      })
-      renderer = createRenderer.createRenerer(ref.current, currentShader.code)
+      const shaderModel = new ShaderModel()
+      shaderModel.setSource(currentShader.code)
+      renderer.current = shaderModel.createRenerer(containerRef.current)
+      renderer.current.animate()
 
-      if (renderer)
+      if (renderer.current)
         return () => {
-          renderer.destroy()
+          renderer.current.destroy()
         }
     }
-  }, [])
+  }, [currentShader])
 
-  // <ShaderFpsBadge />
+  console.log('canvas re-render')
 
   return (
     <Wrapper>
       <ShaderTitle name="Shader" author="Mfecane" rating={3000}></ShaderTitle>
       <div className="canvasOuter">
-        <CanvasContainer ref={ref} />
+        {shaderError && <ErrorOverlay>{shaderError}</ErrorOverlay>}
+        <CanvasContainer ref={containerRef} />
       </div>
     </Wrapper>
   )

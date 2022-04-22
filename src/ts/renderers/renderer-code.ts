@@ -1,3 +1,4 @@
+import { Uniform } from 'ts/model/shader-model'
 import Shader from 'ts/webgl/shader'
 import Texture from 'ts/webgl/texture'
 import TextureCube from 'ts/webgl/texture-cube'
@@ -11,11 +12,6 @@ import TextureCube from 'ts/webgl/texture-cube'
 interface Options {
   vertexSource: string
   fragmentSource: string
-}
-
-interface Uniform {
-  uniform: string
-  value: number
 }
 
 export default class RendererCode {
@@ -51,7 +47,7 @@ export default class RendererCode {
     if (!this.root) return
 
     this.canvas = document.createElement(`canvas`)
-    this.canvas.id = 'canvas'
+    // this.canvas.id = 'canvas'
 
     this.gl = this.canvas.getContext('webgl2')
 
@@ -131,6 +127,16 @@ export default class RendererCode {
   initUniforms(): void {
     this.mainShader.addUniform('u_MVP', '4fv')
     this.mainShader.addUniform('u_time', '1f')
+
+    this.uniforms.forEach(({ type, name }) => {
+      switch (type) {
+        case 'time':
+          return this.mainShader.addUniform('u_time', '1f')
+        case 'float':
+          return this.mainShader.addUniform(`u_${name}`, '1f')
+      }
+    })
+
     // this.mainShader.addUniform('u_mouseX', '1f')
     // this.mainShader.addUniform('u_mouseY', '1f')
     // this.mainShader.addUniform('u_scrollValue', '1f')
@@ -140,16 +146,13 @@ export default class RendererCode {
     // this.mainShader.addUniform('u_Sampler2', '1i')
   }
 
-  addUniform(uniform: string): void {
-    this.uniforms.push({
-      uniform,
-      value: 0,
-    })
+  addUniform(uni: Uniform): void {
+    this.uniforms.push(uni)
   }
 
-  setUniformValue(uniform: string, value: number): void {
-    const u = this.uniforms.find(({ uniform: u }) => u === uniform)
-    u && (u[value] = value)
+  setUniformValue(name: string, value: number): void {
+    const u = this.uniforms.find(({ name: n }) => n === name)
+    u && (u.value = value)
   }
 
   setUniforms(): void {
@@ -163,8 +166,13 @@ export default class RendererCode {
     // this.mainShader.setUniform('u_scrollValue', scrollValue)
     this.mainShader.setUniform('u_quality', 1.0)
 
-    this.uniforms.forEach((u) => {
-      this.mainShader.setUniform(u.uniform, u.value)
+    this.uniforms.forEach(({ type, name, value }) => {
+      switch (type) {
+        case 'time':
+          return this.mainShader.setUniform('u_time', this.time)
+        case 'float':
+          return this.mainShader.setUniform(`u_${name}`, value)
+      }
     })
 
     // if (this.options.texture) {
@@ -248,6 +256,7 @@ export default class RendererCode {
   animate(): void {
     this.renderFrame()
     this.updateFps()
+    // console.log('requestAnimationFrame')
     this.animId = requestAnimationFrame(this.animate.bind(this))
   }
 

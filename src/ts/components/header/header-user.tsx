@@ -26,6 +26,7 @@ const MenuContainer = styled.div`
   right: 0;
   background-color: black;
   padding: 10px;
+  z-index: 6;
 `
 
 const Icon = styled.i`

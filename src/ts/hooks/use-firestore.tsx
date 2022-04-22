@@ -27,6 +27,7 @@ interface Shader {
   id: string
   code: string
   user: string
+  error?: boolean
 }
 
 interface State {
@@ -36,6 +37,15 @@ interface State {
   currentShader: Shader
   shaderListLoading: boolean
   shaderError: Error
+}
+
+const initialState = {
+  shaderList: [],
+  userList: [],
+  shaderListLoading: true,
+  currentUser: null,
+  currentShader: null,
+  shaderError: null,
 }
 
 type Action =
@@ -48,9 +58,11 @@ type Action =
   | { type: 'ADD_CURRENT_USER_DATA'; payload: StateUser }
   | { type: 'CREATE_SHADER'; payload: Shader }
   | { type: 'SET_CURRENT_SHADER'; payload: string }
-  | { type: 'SAVE_CURRENT_SHADER' }
+  | { type: 'SAVE_CURRENT_SHADER'; payload: null }
   | { type: 'UPDATE_CURRENT_SHADER'; payload: Shader }
   | { type: 'SET_USER_LIST'; payload: StateUser[] }
+  | { type: 'SET_SHADER_ERROR'; payload: string }
+  | { type: 'FINISH_SHADER_LOADING' }
 
 const reducer = (state: State, action: Action) => {
   const { type, payload } = action
@@ -70,9 +82,6 @@ const reducer = (state: State, action: Action) => {
 
     case 'SET_SHADER_LIST':
       return { ...state, shaderList: payload, shaderListLoading: false }
-
-    case 'SET_USER_LIST':
-      return { ...state, userList: payload, shaderListLoading: false }
 
     case 'CREATE_SHADER': {
       const newShader = { name: payload }
@@ -112,7 +121,7 @@ const reducer = (state: State, action: Action) => {
 
     case 'UPDATE_CURRENT_SHADER': {
       const shader = { ...state.currentShader, ...payload }
-      return { ...state, currentShader: shader }
+      return { ...state, currentShader: shader, shaderError: null }
     }
 
     case 'SET_SHADER_ERROR': {
@@ -130,13 +139,7 @@ export const FirestoreContextProvider = ({
   children: React.ReactNode
 }): JSX.Element => {
   const { currentUser } = useAuth()
-  const [state, dispatch] = useReducer(reducer, {
-    shaderList: [],
-    shaderListLoading: true,
-    currentUser: null,
-    currentShader: null,
-    shaderError: null,
-  })
+  const [state, dispatch] = useReducer(reducer, initialState)
 
   const initCurrentUser = () => {
     const read = async () => {
@@ -162,12 +165,26 @@ export const FirestoreContextProvider = ({
 
   const initShaderList = () => {
     const read = async () => {
-      const q = query(collection(db, 'shaders'))
+      const q1 = query(collection(db, 'shaders'))
       const shaders: Shader[] = []
-      const querySnapshot = await getDocs(q)
-      querySnapshot.forEach((doc) => {
+      const query1Snapshot = await getDocs(q1)
+      query1Snapshot.forEach((doc) => {
         // doc.data() is never undefined for query doc snapshots
         shaders.push({ ...(doc.data() as Shader), id: doc.id })
+      })
+
+      const q2 = query(collection(db, 'users'))
+      const users: StateUser[] = []
+      const query2Snapshot = await getDocs(q2)
+      query2Snapshot.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        users.push({ ...(doc.data() as StateUser), uid: doc.id })
+      })
+
+      shaders.forEach((sh) => {
+        const user = users.find((u) => u.uid === sh.user)
+        if (!user) sh.error = true
+        sh.user = user?.name || ''
       })
 
       dispatch({
@@ -238,10 +255,6 @@ vec4 getColor(vec2 inuv) {
     })
   }
 
-  const getShaderById = (id: string) => {
-    return state.shaderList.find((el) => el.id === id)
-  }
-
   const updateShader = (data) => {
     dispatch({
       type: 'UPDATE_CURRENT_SHADER',
@@ -250,20 +263,18 @@ vec4 getColor(vec2 inuv) {
   }
 
   const saveShader = async () => {
-    await setDoc(doc(db, 'shaders', state.currentShader.id), {
-      ...state.currentShader,
-    })
+    const currentShader = { ...state.currentShader, user: currentUser.uid }
+    await setDoc(doc(db, 'shaders', state.currentShader.id), currentShader)
     // check is valid
     dispatch({
       type: 'SAVE_CURRENT_SHADER',
     })
   }
 
-  const setShaderError = (e) => {
-    debugger
+  const setShaderError = (error: string) => {
     dispatch({
       type: 'SET_SHADER_ERROR',
-      payload: e,
+      payload: error,
     })
   }
 
@@ -272,7 +283,6 @@ vec4 getColor(vec2 inuv) {
     updateCurrentUser,
     createShader,
     setCurrentShader,
-    getShaderById,
     saveShader,
     updateShader,
     setShaderError,

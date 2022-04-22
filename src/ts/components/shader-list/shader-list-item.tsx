@@ -1,10 +1,12 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
+import { ShaderModel } from 'ts/model/shader-model'
 
 const Wrapper = styled.div`
-  padding: 20px 32px;
-  border-radius: 4px;
+  position: relative;
+  min-height: 300px;
+  cursor: pointer;
 
   &:hover {
     background-color: rgba(90, 167, 234, 0.142);
@@ -12,17 +14,69 @@ const Wrapper = styled.div`
 
   h2 {
     font-weight: bold;
-    font-size: 16px;
+    font-size: 20px;
+    display: inline-block;
   }
+
+  .canvasConatiner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .author {
+    margin-left: 5px;
+    color: #447095;
+    display: inline-block;
+  }
+`
+
+const Header = styled.div`
+  background-color: ${({ error }) => {
+    if (error) return '#e30000'
+    return '#000000'
+  }};
+  padding: 20px 30px;
+  position: relative;
+  z-index: 5;
 `
 
 const ShaderListItem = ({ item }): JSX.Element => {
   const navigate = useNavigate()
+  const containerRef = useRef(null)
+  const renderer = useRef(null)
+
+  // console.log('ShaderListItem', item)
+
+  useEffect(() => {
+    if (renderer.current) {
+      renderer.current.destroy()
+    }
+
+    const shaderModel = new ShaderModel()
+    shaderModel.setSource(item.code)
+    console.log('item.code', item.code)
+    renderer.current = shaderModel.createRenerer(containerRef.current)
+    renderer.current.renderFrame()
+
+    if (renderer.current)
+      return () => {
+        renderer.current.destroy()
+      }
+  }, [])
 
   return (
     <Wrapper onClick={() => navigate(`/shader/${item.id}`)}>
-      <h2>{item.name}</h2>
+      <Header error={item.error}>
+        <h2>{item.name}</h2>
+        {item.user && <span className="author"> by {item.user}</span>}
+      </Header>
+
       <div></div>
+      <div className="canvasConatiner" ref={containerRef}></div>
     </Wrapper>
   )
 }

@@ -3,21 +3,25 @@ import ShaderListItem from 'ts/components/shader-list/shader-list-item'
 
 import styled from 'styled-components'
 import { Container } from 'ts/components/styled/common'
-import useGlobalState from 'ts/contexts/state-context'
 import useFirestore from 'ts/hooks/use-firestore'
 
 const Wrapper = styled.div`
-  background-color: ${({ theme }) => theme.dark2};
+  overflow: auto;
+  min-height: 0;
 `
 
 const List = styled.ul`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 40px;
+  height: 100%;
+  overflow-y: auto;
+  margin-bottom: 60px;
 `
 
 const Header = styled.h3`
   font-size: 2rem;
-  margin: 30px;
+  margin: 30px 0;
 `
 
 const ShaderList = (): JSX.Element => {

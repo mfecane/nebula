@@ -4,6 +4,7 @@ import Canvas from 'ts/components/shader-editor/canvas'
 import Editor from 'ts/components/shader-editor/editor'
 import EditorContainer from 'ts/components/shader-editor/editor-container'
 import useFirestore from 'ts/hooks/use-firestore'
+import Spinner from 'ts/components/common/spinner'
 
 const Shader = (): JSX.Element => {
   const { shaderId } = useParams()

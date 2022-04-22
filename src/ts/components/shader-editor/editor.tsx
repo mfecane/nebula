@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import CodeEditorImport from '@uiw/react-textarea-code-editor'
-import { Row, Button } from 'ts/components/styled/common'
+import { Row, Button, ErrorWrapper } from 'ts/components/styled/common'
 import useFirestore from 'ts/hooks/use-firestore'
+import { ShaderModel, validateShaderSource } from 'ts/model/shader-model'
+import { Message } from 'ts/components/styled/form'
 
 const CodeEditor = styled(CodeEditorImport)`
   flex: 2 1 auto;
@@ -17,9 +19,10 @@ const Wrapper = styled.div`
 
 const Editor = (): JSX.Element => {
   const {
-    state: { currentShader },
+    state: { currentShader, shaderError },
     saveShader,
     updateShader,
+    setShaderError,
   } = useFirestore()
   const [code, setCode] = useState('')
   const [error, setError] = useState(null)
@@ -44,6 +47,14 @@ const Editor = (): JSX.Element => {
   }
 
   const handleUpdateShader = () => {
+    const model = new ShaderModel()
+    model.setSource(code)
+    const error = model.validate()
+    if (error) {
+      setShaderError(error)
+      return
+    }
+
     updateShader({
       code,
     })
@@ -53,7 +64,7 @@ const Editor = (): JSX.Element => {
 
   return (
     <Wrapper>
-      {error}
+      {error && <Message>{error}</Message>}
       <CodeEditor
         value={code}
         language="glsl"
@@ -77,7 +88,9 @@ const Editor = (): JSX.Element => {
       <Row>
         <Button onClick={handleUpdateShader}>Run</Button>
         <Button>Fork</Button>
-        <Button onClick={handleSaveShader}>Save</Button>
+        <Button onClick={handleSaveShader} disabled={!!shaderError}>
+          Save
+        </Button>
       </Row>
     </Wrapper>
   )
