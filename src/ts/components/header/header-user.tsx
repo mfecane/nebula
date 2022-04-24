@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { IconButton } from 'ts/components/styled/common'
-import useFirestore from 'ts/hooks/use-store'
+import useStore from 'ts/hooks/use-store'
 import UserMenu from 'ts/components/header/user-menu'
 
 const Wrapper = styled.div`
@@ -39,7 +39,7 @@ const Icon = styled.i`
 const HeaderUser = (): JSX.Element => {
   const {
     state: { currentUser },
-  } = useFirestore()
+  } = useStore()
   const [showMenu, setShowMenu] = useState(false)
   const ref = useRef()
 

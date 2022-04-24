@@ -29,7 +29,7 @@ const Paginator = ({ page = 0, count, setPage }: Props): JSX.Element => {
     _setPage(i)
   }
 
-  if (count < MAX_ITEMS) {
+  if (count <= MAX_ITEMS) {
     return null
   }
 

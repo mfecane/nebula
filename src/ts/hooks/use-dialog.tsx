@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState } from 'react'
 
+// TODO for future use
+
 export enum DIALOGS {
   'LOGIN',
   'SIGNUP',

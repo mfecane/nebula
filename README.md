@@ -2,18 +2,17 @@
 
 ## ideas
 
-- projet idea shader library
-- lost some project ideas
 - check orbit controls
 - toDataURL
 - add light in center
 - add back button
 
-- error handling in shaders
-- improve list
-- user shaders
 - search
 - access rights
+- more uniforms: orbit controls
+- textures
+- cubemaps
+- add link to original shader
 
 ## STUFF
 

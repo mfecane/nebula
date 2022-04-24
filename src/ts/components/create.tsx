@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import useFirestore from 'ts/hooks/use-store'
+import useStore from 'ts/hooks/use-store'
 
 import {
   Form,
@@ -18,14 +18,14 @@ const Create = (): JSX.Element => {
   const [loading, setloading] = useState(false)
   const nameRef = useRef(null)
   const navigate = useNavigate()
-  const { createShader } = useFirestore()
+  const { createShader } = useStore()
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault()
     setloading(true)
     setError('')
-    const id = await createShader(nameRef.current.value)
-    navigate('/shader/' + id)
+    const shader = await createShader(nameRef.current.value)
+    navigate('/shader/' + shader.id)
     setloading(false)
   }
 

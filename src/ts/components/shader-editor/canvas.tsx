@@ -5,7 +5,7 @@ import ShaderTitle from 'ts/components/shader-editor/shader-title'
 // import ShaderFpsBadge from 'ts/components/shader-editor/shader-fps-badge'
 import RendererCode from 'ts/renderers/renderer-code'
 import { ShaderModel } from 'ts/model/shader-model'
-import useFirestore from 'ts/hooks/use-store'
+import useStore from 'ts/hooks/use-store'
 
 const Wrapper = styled.div`
   padding: 16px;
@@ -62,7 +62,7 @@ const Canvas = (): JSX.Element => {
 
   const {
     state: { currentShader, shaderError },
-  } = useFirestore()
+  } = useStore()
 
   const renderer = useRef(null)
 
@@ -86,7 +86,11 @@ const Canvas = (): JSX.Element => {
 
   return (
     <Wrapper>
-      <ShaderTitle name="Shader" author="Mfecane" rating={3000}></ShaderTitle>
+      <ShaderTitle
+        name={currentShader.name}
+        author={currentShader.user}
+        rating={3000}
+      ></ShaderTitle>
       <div className="canvasOuter">
         {shaderError && <ErrorOverlay>{shaderError}</ErrorOverlay>}
         <CanvasContainer ref={containerRef} />

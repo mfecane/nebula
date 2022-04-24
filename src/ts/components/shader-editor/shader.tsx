@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import Canvas from 'ts/components/shader-editor/canvas'
 import Editor from 'ts/components/shader-editor/editor'
 import EditorContainer from 'ts/components/shader-editor/editor-container'
-import useFirestore from 'ts/hooks/use-store'
+import useStore from 'ts/hooks/use-store'
 import Spinner from 'ts/components/common/spinner'
 
 const Shader = (): JSX.Element => {
@@ -12,7 +12,7 @@ const Shader = (): JSX.Element => {
   const {
     state: { shaderListLoading, currentShader },
     setCurrentShader,
-  } = useFirestore()
+  } = useStore()
 
   useEffect(() => {
     setCurrentShader(shaderId)

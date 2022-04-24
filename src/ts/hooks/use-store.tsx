@@ -18,40 +18,41 @@ export interface ShaderState {
 
 interface State {
   shaderList: ShaderState[]
+  userList: UserState[]
   currentUser: UserState
   currentShader: ShaderState
   shaderListLoading: boolean
   shaderError: Error
-}
-
-interface State {
-  shaderList: ShaderState[]
-}
-interface Context {
-  state: State
-  updateCurrentUser: () => Promise<void>
-  createShader: () => Promise<void>
-  setCurrentShader: () => Promise<void>
-  saveShader: () => Promise<void>
-  updateShader: () => Promise<void>
-  forkShader: () => Promise<void>
-  setShaderError: () => Promise<void>
-}
-
-export const FirestoreContext = createContext<Context>(undefined)
-
-const useFirestore = (): Context => {
-  return useContext<Context>(FirestoreContext)
+  search: string
 }
 
 const initialState: State = {
   shaderList: [],
+  userList: [],
   shaderListLoading: true,
   currentUser: null,
   currentShader: null,
   shaderError: null,
 }
 
+interface Context {
+  state: State
+  updateCurrentUser: () => Promise<void>
+  createShader: () => Promise<ShaderState>
+  setCurrentShader: () => Promise<void>
+  saveShader: () => Promise<void>
+  updateShader: () => Promise<void>
+  forkShader: () => Promise<ShaderState>
+  setShaderError: () => Promise<void>
+  getuserById: (id: string) => UserState
+  doSearch: (s: string) => void
+}
+
+export const FirestoreContext = createContext<Context>(undefined)
+
+const useStore = (): Context => {
+  return useContext<Context>(FirestoreContext)
+}
 type Action =
   | { type: 'SET_CURRENT_USER'; payload: UserState }
   | { type: 'UPDATE_CURRENT_USER'; payload: UserState }
@@ -65,7 +66,8 @@ type Action =
   | { type: 'UPDATE_CURRENT_SHADER'; payload: ShaderState }
   | { type: 'SET_USER_LIST'; payload: UserState[] }
   | { type: 'SET_SHADER_ERROR'; payload: string }
-  | { type: 'FINISH_SHADER_LOADING'; payload?: null }
+  | { type: 'LOADING_FINISHED'; payload?: null }
+  | { type: 'SEARCH'; payload: string }
 
 const reducer = (state: State, action: Action) => {
   const { type, payload } = action
@@ -84,11 +86,17 @@ const reducer = (state: State, action: Action) => {
       }
 
     case 'SET_SHADER_LIST':
-      return { ...state, shaderList: payload, shaderListLoading: false }
+      return { ...state, shaderList: payload }
+
+    case 'SET_USER_LIST':
+      return { ...state, userList: payload }
+
+    case 'LOADING_FINISHED':
+      return { ...state, shaderListLoading: false }
 
     case 'CREATE_SHADER': {
-      const newShader = { name: payload }
-      const shaderList = [...state.shaderList, newShader]
+      const shader = { ...payload, user: { ...state.currentUser } }
+      const shaderList = [...state.shaderList, shader]
 
       return {
         ...state,
@@ -131,6 +139,9 @@ const reducer = (state: State, action: Action) => {
       return { ...state, shaderError: payload }
     }
 
+    case 'SEARCH':
+      return { ...state, search: payload }
+
     default:
       return state
   }
@@ -148,9 +159,8 @@ export const FirestoreContextProvider = ({
     const read = async () => {
       const user = await firestore.readUser(currentUser)
       if (!user) {
-        throw new Error('Invalid user')
+        return
       }
-
       dispatch({
         type: 'SET_CURRENT_USER',
         payload: user,
@@ -160,20 +170,29 @@ export const FirestoreContextProvider = ({
     read()
   }
 
-  const initShaderList = () => {
+  const initShaderData = () => {
     const read = async () => {
-      const shaders = await firestore.readShaders()
+      const [shaders, users] = await firestore.readShaders()
       dispatch({
         type: 'SET_SHADER_LIST',
         payload: shaders,
+      })
+
+      dispatch({
+        type: 'SET_USER_LIST',
+        payload: users,
+      })
+
+      dispatch({
+        type: 'LOADING_FINISHED',
+        payload: null,
       })
     }
     read()
   }
 
   useEffect(initCurrentUser, [currentUser])
-  useEffect(initShaderList, [])
-  // useEffect(initUsers, [])
+  useEffect(initShaderData, [])
 
   const updateCurrentUser = async (data: UserState) => {
     firestore.saveUser(data, state.currentUser)
@@ -183,12 +202,13 @@ export const FirestoreContextProvider = ({
     })
   }
 
-  const createShader = async (name: string) => {
+  const createShader = async (name: string): Promise<ShaderState> => {
     const shader = await firestore.createShader(name, currentUser)
     dispatch({
       type: 'CREATE_SHADER',
       payload: shader,
     })
+    return shader
   }
 
   const setCurrentShader = (id: string) => {
@@ -213,19 +233,37 @@ export const FirestoreContextProvider = ({
     })
   }
 
-  const forkShader = async () => {
-    const shader = await firestore.forkShader(state.currentShader, currentUser)
+  const forkShader: Context['forkShader'] = async () => {
+    const shader = await firestore.forkShader(
+      state.currentShader,
+      state.currentUser
+    )
 
     dispatch({
       type: 'CREATE_SHADER',
       payload: shader,
     })
+    return shader
   }
 
   const setShaderError = (error: string) => {
     dispatch({
       type: 'SET_SHADER_ERROR',
       payload: error,
+    })
+  }
+
+  const getuserById = (uid) => {
+    if (state.userList) {
+      console.error('userList not loaded')
+    }
+    return (state.userList || []).find((u) => u.uid === uid)
+  }
+
+  const doSearch: Context['doSearch'] = (payload) => {
+    dispatch({
+      type: 'SEARCH',
+      payload,
     })
   }
 
@@ -238,13 +276,15 @@ export const FirestoreContextProvider = ({
     updateShader,
     forkShader,
     setShaderError,
+    getuserById,
+    doSearch,
   }
 
   return (
     <FirestoreContext.Provider value={context}>
-      {children}
+      {!state.shaderListLoading && children}
     </FirestoreContext.Provider>
   )
 }
 
-export default useFirestore
+export default useStore

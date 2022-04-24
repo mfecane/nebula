@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { ShaderModel } from 'ts/model/shader-model'
 
@@ -68,10 +68,17 @@ const ShaderListItem = ({ item }): JSX.Element => {
   }, [])
 
   return (
-    <Wrapper onClick={() => navigate(`/shader/${item.id}`)}>
+    <Wrapper>
       <Header error={item.error}>
-        <h2>{item.name}</h2>
-        {item.user && <span className="author"> by {item.user.name}</span>}
+        <h2>
+          <Link to={`/shader/${item.id}`}>{item.name}</Link>
+        </h2>
+        {item.user && (
+          <span className="author">
+            {' '}
+            by <Link to={`/list/user/${item.user.uid}`}>{item.user.name}</Link>
+          </span>
+        )}
       </Header>
 
       <div></div>

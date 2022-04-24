@@ -1,10 +1,12 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+import { UserState } from 'ts/hooks/use-store'
 
 interface Props {
   name: string
   rating: number
-  author: string
+  author: UserState
 }
 
 const Wrapper = styled.div`
@@ -40,7 +42,10 @@ const ShaderTitle = (props: Props) => {
     <Wrapper>
       <div className="title">
         <h2>{props.name}</h2>
-        <span className="author">by {props.author}</span>
+        <span className="author">
+          by{' '}
+          <Link to={`/list/user/${props.author.uid}`}>{props.author.name}</Link>
+        </span>
       </div>
       <span className="rating">{props.rating}</span>
     </Wrapper>

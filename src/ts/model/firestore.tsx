@@ -16,6 +16,8 @@ vec4 getColor(vec2 inuv) {
 }`.trim()
 
 const readUser = async (currentUser: UserState): Promise<UserState> => {
+  if (!currentUser) return null
+
   const docSnap = await getDoc(doc(db, 'users', currentUser.uid))
   if (!docSnap.exists()) {
     return null
@@ -26,7 +28,7 @@ const readUser = async (currentUser: UserState): Promise<UserState> => {
   return user
 }
 
-const readShaders = async (): Promise<ShaderState[]> => {
+const readShaders = async (): Promise<[ShaderState[], UserState[]]> => {
   const q1 = query(collection(db, 'shaders'))
   const shaders: ShaderState[] = []
   const query1Snapshot = await getDocs(q1)
@@ -47,7 +49,7 @@ const readShaders = async (): Promise<ShaderState[]> => {
     sh.user = user || null
   })
 
-  return shaders
+  return [shaders, users]
 }
 
 const saveShader = async (

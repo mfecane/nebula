@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
+import Search from '../shader-list/search'
 import { ButtonLink } from '../styled/common'
 
 const Wrapper = styled.div`
@@ -14,11 +15,12 @@ const Nav = (): JSX.Element => {
 
   return (
     <Wrapper>
+      <Search />
       <ButtonLink>
         <Link to="/create">Create</Link>
       </ButtonLink>
       <ButtonLink>
-        <Link to="/create">Browse</Link>
+        <Link to="/list">Browse</Link>
       </ButtonLink>
     </Wrapper>
   )
