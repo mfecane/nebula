@@ -72,7 +72,7 @@ export class ShaderModel {
       .map((uni) => {
         switch (uni.type) {
           case 'float':
-            return `uniform float ${uni};`
+            return `uniform float ${uni.token as string};`
           case 'time':
             return `uniform float u_time;`
         }

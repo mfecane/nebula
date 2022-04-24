@@ -7,6 +7,7 @@ import CodeEditorImport from '@uiw/react-textarea-code-editor'
 import EditorControls from './editor-controls'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
+import ShaderParameters from './shader-parameters'
 
 const CodeEditor = styled(CodeEditorImport)`
   flex: 2 1 auto;
@@ -114,6 +115,7 @@ const Editor = (): JSX.Element => {
             'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
         }}
       />
+      <ShaderParameters />
       <EditorControls
         handleUpdateShader={handleUpdateShader}
         handleSaveShader={handleSaveShader}
