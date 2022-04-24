@@ -9,7 +9,11 @@ import {
   setDoc,
 } from 'firebase/firestore'
 import { ShaderState, UserState } from 'ts/hooks/use-store'
-import Shader from 'ts/components/shader-editor/shader'
+
+const DEFAULT_CODE = `
+vec4 getColor(vec2 inuv) {
+  return vec4(vec3(0.5 + inuv.x * 0.5, 0.5 + inuv.y * 0.5, 0.0), 1.0);
+}`.trim()
 
 const readUser = async (currentUser: UserState): Promise<UserState> => {
   const docSnap = await getDoc(doc(db, 'users', currentUser.uid))
@@ -50,7 +54,11 @@ const saveShader = async (
   shader: ShaderState,
   currentUser: UserState
 ): Promise<void> => {
-  const data = { code: shader.code, user: currentUser.uid }
+  const data = {
+    name: shader.name || 'some random-ass shader',
+    code: shader.code,
+    user: currentUser.uid,
+  }
   await setDoc(doc(db, 'shaders', shader.id), data)
 }
 
@@ -72,10 +80,7 @@ const createShader = async (
   const shader = {
     name: name,
     user: currentUser.uid,
-    code: `
-vec4 getColor(vec2 inuv) {
-return vec4(vec3(0.5 + inuv.x * 0.5, 0.5 + inuv.y * 0.5, 0.0), 1.0);
-}`.trim(),
+    code: DEFAULT_CODE,
   }
 
   const docRef = await addDoc(collection(db, 'shaders'), shader)

@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ShaderListItem from 'ts/components/shader-list/shader-list-item'
 
 import styled from 'styled-components'
 import { Container } from 'ts/components/styled/common'
 import useFirestore from 'ts/hooks/use-store'
 import { useParams } from 'react-router-dom'
+import Paginator, { MAX_ITEMS } from './paginator'
 
 const Wrapper = styled.div`
   overflow: auto;
@@ -34,15 +35,18 @@ const ShaderList = ({ current }: Props): JSX.Element => {
     state: { shaderList, currentUser },
   } = useFirestore()
 
-  // const par = useParams()
-  // console.log(par)
-  // debugger
+  const [page, setPage] = useState(0)
 
   let renderList = shaderList
 
   if (current) {
     renderList = shaderList.filter((el) => el.user?.uid === currentUser.uid)
   }
+
+  const totalItems = renderList.length
+  renderList = renderList.filter(
+    (el, index) => index >= page * MAX_ITEMS && index < (page + 1) * MAX_ITEMS
+  )
 
   const elementsJSX = renderList.map((item) => {
     return <ShaderListItem item={item} key={item.id} />
@@ -53,6 +57,7 @@ const ShaderList = ({ current }: Props): JSX.Element => {
       <Container>
         <Header>Shader gallery</Header>
         <List>{elementsJSX}</List>
+        <Paginator count={totalItems} setPage={setPage} />
       </Container>
     </Wrapper>
   )
