@@ -29,3 +29,18 @@
 .CodeMirror {
   min-height: 100%;
 }
+
+.search-bar:before {
+  mask-image: url(assets/glass.svg);
+  background-color: white;
+  width: 22px;
+  height: 22px;
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+}

@@ -6,7 +6,7 @@ import { ButtonLink } from '../styled/common'
 
 const Wrapper = styled.div`
   display: flex;
-  gap: 16px;
+  gap: 20px;
   justify-self: stretch;
 `
 
@@ -17,10 +17,10 @@ const Nav = (): JSX.Element => {
     <Wrapper>
       <Search />
       <ButtonLink>
-        <Link to="/create">Create</Link>
+        <Link to="/list">Browse</Link>
       </ButtonLink>
       <ButtonLink>
-        <Link to="/list">Browse</Link>
+        <Link to="/create">Create</Link>
       </ButtonLink>
     </Wrapper>
   )

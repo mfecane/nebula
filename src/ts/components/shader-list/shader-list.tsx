@@ -25,10 +25,18 @@ const ShaderList = ({ list }: Props): JSX.Element => {
   let renderList = list
 
   const totalItems = renderList.length
-  renderList = renderList.filter(
-    (el: any, index: number) =>
-      index >= page * MAX_ITEMS && index < (page + 1) * MAX_ITEMS
-  )
+  renderList = renderList
+    .filter(
+      (el: any, index: number) =>
+        index >= page * MAX_ITEMS && index < (page + 1) * MAX_ITEMS
+    )
+    .sort((a, b) => {
+      const aSec = a?.updated?.seconds || 0
+      const bSec = b?.updated?.seconds || 0
+      return bSec - aSec
+    })
+
+  console.log('renderList', renderList)
 
   const elementsJSX = renderList.map((item: ShaderState) => {
     return <ShaderListItem item={item} key={item.id} />

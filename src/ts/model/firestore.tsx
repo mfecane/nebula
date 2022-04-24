@@ -1,5 +1,6 @@
 import { db } from 'ts/firebase'
 import {
+  serverTimestamp,
   addDoc,
   collection,
   doc,
@@ -60,6 +61,7 @@ const saveShader = async (
     name: shader.name || 'some random-ass shader',
     code: shader.code,
     user: currentUser.uid,
+    updated: serverTimestamp(),
   }
   await setDoc(doc(db, 'shaders', shader.id), data)
 }
@@ -83,6 +85,7 @@ const createShader = async (
     name: name,
     user: currentUser.uid,
     code: DEFAULT_CODE,
+    updated: serverTimestamp(),
   }
 
   const docRef = await addDoc(collection(db, 'shaders'), shader)
@@ -102,6 +105,7 @@ const forkShader = async (
     name: `${currentShader.name} (forked by ${currentUser.name})`,
     code: currentShader.code,
     user: currentUser.uid,
+    updated: serverTimestamp(),
   }
 
   const docRef = await addDoc(collection(db, 'shaders'), shader)

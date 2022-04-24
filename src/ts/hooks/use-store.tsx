@@ -1,3 +1,4 @@
+import { FieldValue } from 'firebase/firestore'
 import React, { createContext, useContext, useEffect, useReducer } from 'react'
 import useAuth from 'ts/hooks/use-auth'
 import firestore from 'ts/model/firestore'
@@ -14,6 +15,7 @@ export interface ShaderState {
   name: string
   user: UserState | string
   error?: boolean
+  updated: FieldValue
 }
 
 interface State {
@@ -33,6 +35,7 @@ const initialState: State = {
   currentUser: null,
   currentShader: null,
   shaderError: null,
+  search: '',
 }
 
 interface Context {

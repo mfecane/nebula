@@ -70,7 +70,7 @@ const EditorContainer = ({ left, right }: Props): JSX.Element => {
   }, [ratio])
 
   useEffect(() => {
-    updateRatio(0.3)
+    updateRatio(0.4)
   }, [])
 
   const dragStart: MouseEventHandler<HTMLDivElement> = (e) => {
