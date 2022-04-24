@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { IconButton } from 'ts/components/styled/common'
-import useFirestore from 'ts/hooks/use-firestore'
+import useFirestore from 'ts/hooks/use-store'
 import UserMenu from 'ts/components/header/user-menu'
 
 const Wrapper = styled.div`

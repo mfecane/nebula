@@ -3,7 +3,8 @@ import ShaderListItem from 'ts/components/shader-list/shader-list-item'
 
 import styled from 'styled-components'
 import { Container } from 'ts/components/styled/common'
-import useFirestore from 'ts/hooks/use-firestore'
+import useFirestore from 'ts/hooks/use-store'
+import { useParams } from 'react-router-dom'
 
 const Wrapper = styled.div`
   overflow: auto;
@@ -24,13 +25,27 @@ const Header = styled.h3`
   margin: 30px 0;
 `
 
-const ShaderList = (): JSX.Element => {
+interface Props {
+  current: true
+}
+
+const ShaderList = ({ current }: Props): JSX.Element => {
   const {
-    state: { shaderList },
+    state: { shaderList, currentUser },
   } = useFirestore()
 
-  const elementsJSX = shaderList.map((part) => {
-    return <ShaderListItem item={part} key={part.id} />
+  // const par = useParams()
+  // console.log(par)
+  // debugger
+
+  let renderList = shaderList
+
+  if (current) {
+    renderList = shaderList.filter((el) => el.user?.uid === currentUser.uid)
+  }
+
+  const elementsJSX = renderList.map((item) => {
+    return <ShaderListItem item={item} key={item.id} />
   })
 
   return (

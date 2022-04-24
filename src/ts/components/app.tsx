@@ -13,7 +13,7 @@ import SignUp from 'ts/components/auth/signup'
 import Layout from 'ts/components/Layout'
 import LogIn from 'ts/components/auth/login'
 import Shader from 'ts/components/shader-editor/shader'
-import { FirestoreContextProvider } from 'ts/hooks/use-firestore'
+import { FirestoreContextProvider } from 'ts/hooks/use-store'
 import { AuthContextProvider } from 'ts/hooks/use-auth'
 
 const App = (): JSX.Element => {
@@ -26,9 +26,10 @@ const App = (): JSX.Element => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Layout />}>
-                  <Route path="shader/" element={<ShaderList />} />
+                  <Route path="list/" element={<ShaderList />} />
+                  <Route path="list/user/:userId" element={<ShaderList />} />
+                  <Route path="list/my" element={<ShaderList current />} />
                   <Route path="shader/:shaderId" element={<Shader />} />
-                  <Route path="shader/user" element={<ShaderList />} />
                   <Route index element={<ShaderList />} />
                 </Route>
                 <Route path="/signup" element={<SignUp />} />

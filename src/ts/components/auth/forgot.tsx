@@ -11,7 +11,7 @@ import {
 import { Button, ModalContainer, Header1 } from 'ts/components/styled/common'
 import { Link, useNavigate } from 'react-router-dom'
 import Logo from 'ts/components/common/logo'
-import useFirestore from 'ts/hooks/use-firestore'
+import useFirestore from 'ts/hooks/use-store'
 
 const Forgot = (): JSX.Element => {
   const [error, setError] = useState('')

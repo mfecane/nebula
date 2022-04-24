@@ -5,7 +5,7 @@ import ShaderTitle from 'ts/components/shader-editor/shader-title'
 // import ShaderFpsBadge from 'ts/components/shader-editor/shader-fps-badge'
 import RendererCode from 'ts/renderers/renderer-code'
 import { ShaderModel } from 'ts/model/shader-model'
-import useFirestore from 'ts/hooks/use-firestore'
+import useFirestore from 'ts/hooks/use-store'
 
 const Wrapper = styled.div`
   padding: 16px;
@@ -83,8 +83,6 @@ const Canvas = (): JSX.Element => {
         }
     }
   }, [currentShader])
-
-  console.log('canvas re-render')
 
   return (
     <Wrapper>

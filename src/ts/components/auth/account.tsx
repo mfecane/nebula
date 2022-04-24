@@ -8,7 +8,7 @@ import {
   Message,
 } from 'ts/components/styled/form'
 import Logo from 'ts/components/common/logo'
-import useFirestore from 'ts/hooks/use-firestore'
+import useFirestore from 'ts/hooks/use-store'
 
 const Account = (): JSX.Element => {
   const [error, setError] = useState('')

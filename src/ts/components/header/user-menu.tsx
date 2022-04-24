@@ -36,7 +36,7 @@ const UserMenu = (): JSX.Element => {
         <Link to="/create">Create shader</Link>
       </Option>
       <Option>
-        <Link to="/shader/user">Your shaders</Link>
+        <Link to="/list/my">Your shaders</Link>
       </Option>
       <hr />
       <Option>

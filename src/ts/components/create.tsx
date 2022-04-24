@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import useFirestore from 'ts/hooks/use-firestore'
+import useFirestore from 'ts/hooks/use-store'
 
 import {
   Form,

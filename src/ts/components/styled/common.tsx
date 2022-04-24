@@ -25,7 +25,10 @@ export const Button = styled.button`
   min-width: 120px;
   border-radius: 3px;
   color: ${getColor('dark')};
-  background-color: ${getColor('accent')};
+  background-color: ${({ green, theme }) => {
+    if (green) return '#65d026'
+    return theme.accent
+  }};
   font-weight: bold;
 `
 

@@ -58,7 +58,6 @@ const ShaderListItem = ({ item }): JSX.Element => {
 
     const shaderModel = new ShaderModel()
     shaderModel.setSource(item.code)
-    console.log('item.code', item.code)
     renderer.current = shaderModel.createRenerer(containerRef.current)
     renderer.current.renderFrame()
 
@@ -72,7 +71,7 @@ const ShaderListItem = ({ item }): JSX.Element => {
     <Wrapper onClick={() => navigate(`/shader/${item.id}`)}>
       <Header error={item.error}>
         <h2>{item.name}</h2>
-        {item.user && <span className="author"> by {item.user}</span>}
+        {item.user && <span className="author"> by {item.user.name}</span>}
       </Header>
 
       <div></div>

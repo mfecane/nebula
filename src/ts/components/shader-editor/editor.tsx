@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
+import { ErrorWrapper } from 'ts/components/styled/common'
+import useFirestore from 'ts/hooks/use-store'
+import { ShaderModel } from 'ts/model/shader-model'
 import CodeEditorImport from '@uiw/react-textarea-code-editor'
-import { Row, Button, ErrorWrapper } from 'ts/components/styled/common'
-import useFirestore from 'ts/hooks/use-firestore'
-import { ShaderModel, validateShaderSource } from 'ts/model/shader-model'
-import { Message } from 'ts/components/styled/form'
+import EditorControls from './editor-controls'
+import { toast } from 'react-toastify'
 
 const CodeEditor = styled(CodeEditorImport)`
   flex: 2 1 auto;
@@ -19,7 +20,7 @@ const Wrapper = styled.div`
 
 const Editor = (): JSX.Element => {
   const {
-    state: { currentShader, shaderError },
+    state: { currentShader },
     saveShader,
     updateShader,
     setShaderError,
@@ -38,7 +39,15 @@ const Editor = (): JSX.Element => {
         updateShader({
           code,
         })
-        saveShader()
+        await saveShader()
+        toast.success('🦄 Saved!', {
+          position: 'bottom-right',
+          autoClose: 2000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: false,
+        })
       } catch (e) {
         setError(e.message)
       }
@@ -60,11 +69,9 @@ const Editor = (): JSX.Element => {
     })
   }
 
-  console.log('render editor')
-
   return (
     <Wrapper>
-      {error && <Message>{error}</Message>}
+      {error && <ErrorWrapper>{error}</ErrorWrapper>}
       <CodeEditor
         value={code}
         language="glsl"
@@ -85,13 +92,10 @@ const Editor = (): JSX.Element => {
             'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
         }}
       />
-      <Row>
-        <Button onClick={handleUpdateShader}>Run</Button>
-        <Button>Fork</Button>
-        <Button onClick={handleSaveShader} disabled={!!shaderError}>
-          Save
-        </Button>
-      </Row>
+      <EditorControls
+        handleUpdateShader={handleUpdateShader}
+        handleSaveShader={handleSaveShader}
+      />
     </Wrapper>
   )
 }
