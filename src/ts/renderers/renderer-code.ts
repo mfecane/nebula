@@ -1,4 +1,5 @@
 import { Uniform } from 'ts/model/shader-model'
+import { getShaderParameter } from 'ts/model/shader-parameters'
 import Shader from 'ts/webgl/shader'
 import Texture from 'ts/webgl/texture'
 import TextureCube from 'ts/webgl/texture-cube'
@@ -166,12 +167,14 @@ export default class RendererCode {
     // this.mainShader.setUniform('u_scrollValue', scrollValue)
     this.mainShader.setUniform('u_quality', 1.0)
 
-    this.uniforms.forEach(({ type, name, value }) => {
+    this.uniforms.forEach(({ type, name, token }) => {
       switch (type) {
         case 'time':
           return this.mainShader.setUniform('u_time', this.time)
-        case 'float':
+        case 'float': {
+          const value = getShaderParameter(token)
           return this.mainShader.setUniform(`u_${name}`, value)
+        }
       }
     })
 

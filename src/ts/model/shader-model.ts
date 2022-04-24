@@ -97,14 +97,14 @@ export class ShaderModel {
 
       if (tok.startsWith('u_cube_')) {
         const match = new RegExp('u_(cube[[a-z]_]+)', 'g').exec(tok)
-        console.log('u_tex_ match', match[1])
+        // console.log('u_tex_ match', match[1])
         this.uniforms.push({ token: tok, type: 'texture', name: match[1] })
         return
       }
 
       if (tok.startsWith('u_tex_')) {
         const match = new RegExp('u_(tex[a-z_]+)', 'g').exec(tok)
-        console.log('u_tex_ match', match[1])
+        // console.log('u_tex_ match', match[1])
         this.uniforms.push({ token: tok, type: 'texture', name: match[1] })
         return
       }
@@ -115,8 +115,9 @@ export class ShaderModel {
       }
 
       if (tok.startsWith('u_')) {
+        const name = tok.slice(2)
         if (!defaultUniforms.includes(tok)) {
-          this.uniforms.push({ token: tok, type: 'float', name: tok })
+          this.uniforms.push({ token: tok, type: 'float', name: name })
         }
       }
     })

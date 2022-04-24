@@ -13,6 +13,7 @@
 - textures
 - cubemaps
 - add link to original shader
+- save parameters
 
 ## STUFF
 

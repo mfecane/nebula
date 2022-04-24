@@ -60,6 +60,7 @@ export default class Shader {
   }
 
   setUniform(name: string, ...args): void {
+    console.log('name', name)
     const u = this.uniforms.find((u) => u.name === name)
     if (u) {
       switch (u.type) {

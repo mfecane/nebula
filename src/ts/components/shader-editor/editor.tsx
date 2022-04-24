@@ -18,6 +18,8 @@ const Wrapper = styled.div`
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  padding: 16px;
+  padding-right: 0;
 `
 
 const runToast = (msg: string): void => {
@@ -106,7 +108,6 @@ const Editor = (): JSX.Element => {
           // minHeight: '100%',
           backgroundColor: '#212b38',
           borderRadius: 3,
-          margin: 16,
           marginRight: 2,
           fontSize: 16,
           flex: '1 0 auto',
