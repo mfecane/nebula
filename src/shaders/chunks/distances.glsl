@@ -5,7 +5,7 @@ float sdGyroid(vec3 p, float scale, float bias) {
 
 float sdGyroid2(vec3 p, float scale, float bias) {
   p *= scale;
-  return abs(dot(sin(p), cos(p.yzx))) / scale - bias;
+  return (abs(dot(sin(p), cos(p.yzx))) - bias) / scale;
 }
 
 float sdGyroid3(vec3 p, float scale, float bias) {

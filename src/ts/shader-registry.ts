@@ -12,12 +12,12 @@ export const getShaderList = () => {
 import sh009 from 'shaders/raymarch-reflections3.frag'
 import img001 from 'assets/bg.jpg'
 
-import posX01 from 'assets/Yokohama3/posx.jpg'
-import negX01 from 'assets/Yokohama3/negx.jpg'
-import posY01 from 'assets/Yokohama3/posy.jpg'
-import negY01 from 'assets/Yokohama3/negy.jpg'
-import posZ01 from 'assets/Yokohama3/posz.jpg'
-import negZ01 from 'assets/Yokohama3/negz.jpg'
+import posX01 from 'assets/LancellottiChapel/posx.jpg'
+import negX01 from 'assets/LancellottiChapel/negx.jpg'
+import posY01 from 'assets/LancellottiChapel/posy.jpg'
+import negY01 from 'assets/LancellottiChapel/negy.jpg'
+import posZ01 from 'assets/LancellottiChapel/posz.jpg'
+import negZ01 from 'assets/LancellottiChapel/negz.jpg'
 
 addShader({
   name: 'Shiny gyroid',

@@ -22,8 +22,10 @@ uniform samplerCube u_Sampler2;
 #define TAU 6.28318530718
 
 #define MAX_STEPS 128
-#define MAX_DIST 15.0
-#define SURF_DIST 0.0005 // hit distance
+#define MAX_DIST 20.0
+#define SURF_DIST 0.0001 // hit distance
+
+#define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
 
 $lib
 $distances
@@ -31,8 +33,7 @@ $noise
 $simplex-noise
 $col
 $sampleBlur
-
-#define R(p, a) p = cos(a) * p + sin(a) * vec2(p.y, -p.x)
+$space
 
 vec3 hash33(vec3 p) {
     float n = sin(dot(p , vec3(7, 157, 113)));
@@ -65,38 +66,60 @@ float dSphere(vec3 point, float radius) {
   return dist;
 }
 
+
+vec3 twistSpace2(vec3 point, float amount) {
+  float angle = point.y * point.x * PI * amount;
+
+  return vec3(
+    point.x * sin(angle) + point.z * cos(angle),
+    point.y,
+    point.x * - cos(angle) + point.z * sin(angle)
+  );
+}
+
+float gyroid1(vec3 point) {
+  return sdGyroid2(point + vec3(4.3345, 5.2515, 7.2351), 4.17, 0.4) / 2.0;
+}
+
+float gyroid2(vec3 point) {
+  point = twistSpace(point, 0.3);
+  return sdGyroid2(point, 6.7, 0.7) / 2.0;
+}
+
 float sceneDistance(vec3 point) {
-  vec3 p1 = point + vec3(0.0, 0.7 * (0.5 + 0.5 * sin(u_time / 10.0)), 0.0);
+  point.y = point.y * 0.7;
+  point = twistSpace2(point, 0.7);
 
-  float g1 = sdGyroid2(p1 * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.2 + 0.8 * u_thick);
-  float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.2 + 0.8 * u_thick);
-  float sph = dSphere(p1, 1.2);
+  float g1 = gyroid1(point);
+  float g2 = gyroid2(point);
+  // float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.2 + 0.8 * u_thick);
+  float sph = dSphere(point, 1.3);
   // float pl = dPlane(point);
-  float sph2 = dBigSphere(point, 20.0);
+  // float sph2 = dBigSphere(point, 20.0);
 
-  float d = smin(g1, g2, -0.2) / 10.0;
-  d = smin(d, sph, -0.1);
-  d = smin(d, sph2, 0.08);
+  float d = smin(g1, g2, -0.05);
+  d = smin(d, sph, -0.05);
+  // d = smin(d, sph2, 0.08);
 
   return d;
 }
 
 float sceneMaterial(vec3 point) {
-  vec3 p1 = point + vec3(0.0, 0.7 * (0.5 + 0.5 * sin(u_time / 10.0)), 0.0);
+  // vec3 p1 = point + vec3(0.0, 0.7 * (0.5 + 0.5 * sin(u_time / 10.0)), 0.0);
 
-  float g1 = sdGyroid2(p1 * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.2 + 0.8 * u_thick);
-  float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.2 + 0.8 * u_thick);
-  float sph = dSphere(p1, 1.2);
-  // float pl = dPlane(point);
-  float sph2 = dBigSphere(point, 20.0);
+  // float g1 = sdGyroid2(p1 * 8.0, 0.7456 + 0.7674 * u_gyrdens1, 0.2 + 0.8 * u_thick);
+  // // float g2 = sdGyroid3(p1 * 8.0, 0.6324, 0.2 + 0.8 * u_thick);
+  // float sph = dSphere(p1, 1.2);
+  // // float pl = dPlane(point);
+  // // float sph2 = dBigSphere(point, 20.0);
 
-  float d = max(g1, g2) / 10.0;
-  d = max(d, sph);
-  d = min(d - 0.03, sph2);
+  // // float d = smin(g1, g2, -0.2) / 10.0;
+  // float d = max(g1, sph, -0.1);
+  // // d = smin(d, sph2, 0.08);
 
-  if(d == sph2) {
-    return 0.0;
-  }
+  // // if(d == sph2) {
+  // //   return 0.0;
+  // // }
 
   return 1.0;
 }
@@ -129,7 +152,7 @@ vec3 GetNormal(vec3 p) {
 void main() {
   const float mouseFactor = 0.0005;
   vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1.0));
-	vec3 rayOrigin = vec3(-0.4, 0.0, -0.5 - u_scrollValue * 1.0);
+	vec3 rayOrigin = vec3(-0.4, 0.0, -2.0 - u_scrollValue * 2.0);
   float mouseY1 = max(u_mouseY, -70.0);
 
 
@@ -149,9 +172,9 @@ void main() {
   float dif;
   float dif1;
 
-  // vec4 samp = SampleCubeBlur(rayDirection);
-  vec4 samp = texture(u_Sampler2, rayDirection);
-  col = samp.rgb * 0.3;
+  vec4 samp = SampleCubeBlur(rayDirection) * smoothstep(2.5, 0.0, length(uv));
+  // vec4 samp = texture(u_Sampler2, rayDirection);
+  col = samp.rgb;
 
   if (d < MAX_DIST) {
     vec3 p = rayOrigin + rayDirection * d;
@@ -169,44 +192,32 @@ void main() {
     vec4 samp = texture(u_Sampler2, r);
     col = samp.rgb * dif + 0.05 * dif * dot(n, vec3(0.0, 1.0, 0.0));
 
+    // simple shading
+    // col = vec3(dot(vec3(0.0, 1.0, 0.0), n));
+
     vec3 reflectDirection = normalize(r);
     vec3 reflectOrigin = p + reflectDirection * SURF_DIST  + 0.02;
 
-    float d1 = rayMarch(reflectOrigin, reflectDirection);
+    // float d1 = rayMarch(reflectOrigin, reflectDirection);
 
-    if (d1 < MAX_DIST) {
-      vec3 p1 = reflectOrigin + reflectDirection * d1;
-      vec3 n1 = GetNormal(p1);
-      vec3 r1 = reflect(reflectDirection, n1);
-      vec4 samp = texture(u_Sampler2, r1);
-      col += samp.rgb / 2.0;
-    }
+    // if (d1 < MAX_DIST) {
+    //   vec3 p1 = reflectOrigin + reflectDirection * d1;
+    //   vec3 n1 = GetNormal(p1);
+    //   vec3 r1 = reflect(reflectDirection, n1);
+    //   vec4 samp = texture(u_Sampler2, r1);
+    //   col += samp.rgb / 2.0;
+    // }
 
-    if (mat == 0.0) {
-      col *= 0.8 * smoothstep(3.0, 0.0, length(p.xz));
-    } else {
-      col = 1.2 * mix(
-        col,
-        vec3( 0.0, -3.5, 0.5) * col.zyx,
-        smoothstep(0.8, 0.1, abs(dot(n, -rayDirection - vec3(0.0, -0.1, 0.0))))
-      );
-    }
+    // if (mat == 0.0) {
+    //   col *= 0.8 * smoothstep(3.0, 0.0, length(p.xz));
+    // } else {
+    //   col = 1.2 * mix(
+    //     col,
+    //     vec3( 0.0, -3.5, 0.5) * col.zyx,
+    //     smoothstep(0.8, 0.1, abs(dot(n, -rayDirection - vec3(0.0, -0.1, 0.0))))
+    //   );
+    // }
   }
-
-  col *= 1.0 - 0.9 *
-    (0.5  + sin(uv.y * 900.0)) *
-    smoothstep(-0.2, 1.0, uv.y * uv.y) *
-    u_vignette;
-
-  // dim
-  float norm = clamp(length(col), 0.0, 1.0);
-  col = vec3(
-    blendColor(
-      col * (1.0 - u_dim * 0.2),
-      vec3(50.0 / 255.0, 59.0 / 255.0, 74.0 / 255.0),
-      u_dim * u_dim
-    )
-  ) * (1.0 - norm * norm * u_dim * 0.4);
 
   FragColor = vec4(col, 1.0);
 }
