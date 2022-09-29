@@ -18,6 +18,10 @@ let proj
 let startTime = Date.now()
 let time = startTime
 
+let fpsHistory = []
+let fps
+let fpsTime = Date.now()
+
 const calculateMVP = function () {
   const left = -width / height
   const right = width / height
@@ -48,6 +52,7 @@ const drawImage = function (): void {
   nebulaShader.setUniform('u_mouseX', mouseX)
   nebulaShader.setUniform('u_mouseY', mouseY)
   nebulaShader.setUniform('u_scrollValue', scrollValue)
+  nebulaShader.setUniform('u_quality', 1.0)
   nebulaShader.setUniform('u_control1', getControlValue(1) / 100)
   nebulaShader.setUniform('u_control2', getControlValue(2) / 100)
   nebulaShader.setUniform('u_control3', getControlValue(3) / 100)
@@ -73,9 +78,28 @@ const setCanvasSize = function (): void {
   gl.viewport(0, 0, width, height)
 }
 
+const calcFps = function() {
+  let now = Date.now()
+  if (now === fpsTime) {
+    return
+  }
+  fpsHistory.push(1000.0 / (now - fpsTime))
+  fpsTime = now
+  if (fpsHistory.length < 10) {
+    return
+  }
+  fps = Math.floor(fpsHistory.reduce((acc, cur) => {
+    return (acc + cur) / 2
+  }) * 100) / 100
+  window.fps.innerHTML = fps
+  fpsHistory.unshift();
+}
+
 export const animate = function () {
   calculateMVP()
   drawImage()
+  calcFps()
+
   requestAnimationFrame(animate)
 }
 
@@ -134,6 +158,7 @@ export const init = function (root, vertShaderSrc, fragShaderSrc) {
   nebulaShader.addUniform('u_mouseX', '1f')
   nebulaShader.addUniform('u_mouseY', '1f')
   nebulaShader.addUniform('u_scrollValue', '1f')
+  nebulaShader.addUniform('u_quality', '1f')
   nebulaShader.addUniform('u_control1', '1f')
   nebulaShader.addUniform('u_control2', '1f')
   nebulaShader.addUniform('u_control3', '1f')

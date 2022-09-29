@@ -1,6 +1,16 @@
-float sdGyroid(vec3 p, float scale) {
+float sdGyroid(vec3 p, float scale, float bias) {
   p *= scale;
-  return abs(dot(sin(p), cos(p.zxy)) - 0.7) / scale - 0.7;
+  return abs(dot(sin(p), cos(p.zxy))) / scale - bias;
+}
+
+float sdGyroid2(vec3 p, float scale, float bias) {
+  p *= scale;
+  return abs(dot(sin(p), cos(p.yzx))) / scale - bias;
+}
+
+float sdGyroid3(vec3 p, float scale, float bias) {
+  p *= scale;
+  return abs(dot(sin(p), cos(p.zxy))) / scale - bias;
 }
 
 float sdBox(vec3 p, vec3 s) {
@@ -10,4 +20,8 @@ float sdBox(vec3 p, vec3 s) {
 
 float sdSphere(vec3 p, float radius) {
   return (length(p) - radius);
+}
+
+float sdSphere2(vec3 p, float radius, float bias) {
+  return abs((length(p) - radius)) - bias;
 }
